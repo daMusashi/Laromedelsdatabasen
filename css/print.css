@@ -1,0 +1,25 @@
+@charset "utf-8";
+@media print {
+
+body, div {
+	color: #000;
+	background-color: #FFF;	
+}
+
+.print-elem {
+	
+}
+
+.button-big {
+	display: none;
+}
+
+.button-small {
+	display: none;
+}
+
+.print-elev {
+	page-break-after:always;
+}
+
+}

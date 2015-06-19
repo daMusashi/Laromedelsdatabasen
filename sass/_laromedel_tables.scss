@@ -1,0 +1,27 @@
+table.main {
+	
+	strong {
+		color: #fff;
+	}
+
+	tr.unavaible {
+		a {
+			color: $color-unavaible;
+		}
+	}
+
+	td {
+		color: #bbb;
+	}
+
+	td.major {
+		font-weight: bold;
+		font-size: 110%;
+		color: $brand-info;
+	}
+
+	td.minor {
+		font-weight: normal;
+		font-size: 70%;
+	}
+}

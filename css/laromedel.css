@@ -1,0 +1,23 @@
+@media -sass-debug-info{filename{font-family:file\:\/\/E\:\/Dropbox\/Arbete\/htdocs\/laromedel\/sass\/_laromedel_tables\.scss}line{font-family:\000033}}
+table.main strong {
+  color: #fff;
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/E\:\/Dropbox\/Arbete\/htdocs\/laromedel\/sass\/_laromedel_tables\.scss}line{font-family:\000038}}
+table.main tr.unavaible a {
+  color: #666;
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/E\:\/Dropbox\/Arbete\/htdocs\/laromedel\/sass\/_laromedel_tables\.scss}line{font-family:\0000313}}
+table.main td {
+  color: #bbb;
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/E\:\/Dropbox\/Arbete\/htdocs\/laromedel\/sass\/_laromedel_tables\.scss}line{font-family:\0000317}}
+table.main td.major {
+  font-weight: bold;
+  font-size: 110%;
+  color: #3498DB;
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/E\:\/Dropbox\/Arbete\/htdocs\/laromedel\/sass\/_laromedel_tables\.scss}line{font-family:\0000323}}
+table.main td.minor {
+  font-weight: normal;
+  font-size: 70%;
+}
