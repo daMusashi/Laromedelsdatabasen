@@ -1,6 +1,7 @@
 <?php
 // Navigering
 
+
 $NAV["kurser"]["include"] = "page_kurser.php";
 $NAV["kurser"]["label"] = "Kurser";
 $NAV["kurser"]["roll"] = "all";
@@ -43,7 +44,7 @@ $NAV["dev"]["place"] = "dev";*/
 $NAV["help"]["include"] = "page_help.php";
 $NAV["help"]["label"] = "Hjälp";
 $NAV["help"]["roll"] = "user";
-$NAV["print"]["place"] = "main";
+$NAV["help"]["place"] = "main";
 
 // underval/sekundär eny
 
@@ -106,17 +107,5 @@ $NAV["admin-backup"]["include"] = "admin/admin_backup.php";
 $NAV["admin-backup"]["label"] = "Backup";
 $NAV["admin-backup"]["roll"] = "admin";
 $NAV["admin-backup"]["place"] = "admin";
-
-// oldies
-
-$NAV_SEC["dev"]["import-skola"]["include"] = "admin/import.php";
-$NAV_SEC["dev"]["import-skola"]["label"] = "Importera skoldata";
-$NAV_SEC["dev"]["import-skola"]["roll"] = "dev";
-$NAV_SEC["dev"]["import-bocker"]["include"] = "admin/import_bocker.php";
-$NAV_SEC["dev"]["import-bocker"]["label"] = "Importera böcker";
-$NAV_SEC["dev"]["import-bocker"]["roll"] = "dev";
-$NAV_SEC["dev"]["tabeller"]["include"] = "admin/printTabeller.php";
-$NAV_SEC["dev"]["tabeller"]["label"] = "Tabeller";
-$NAV_SEC["dev"]["tabeller"]["roll"] = "dev";
 
 ?>

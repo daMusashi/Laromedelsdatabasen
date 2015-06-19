@@ -29,7 +29,7 @@
 		const PK_ID = self::FN_ID; // fieldname PRIMARY key 
 		const FK_ID = "boknings_id"; // fieldname FORIEGN key 
 		
-		public $id = NULL;
+		public $id = -1;
 		public $kursId = NULL;
 		public $bokId = NULL;
 		public $inTid = NULL; // Sparat Tillfalle-id för in-tid
@@ -41,8 +41,9 @@
 		public $demo = NULL;
 
 		public $urlView = "#"; // genereras
-		public $urlVEdit = "#"; // genereras
-		public $urlDelete= "#"; // genereras
+		public $urlEdit = "#"; // genereras
+		public $urlDelete = "#"; // genereras
+		
 		
 		public $isEmpty = true;
 
@@ -55,56 +56,34 @@
 		Statics
 	*/
 	
-	public static function _OBSLEUTE_getAll($where = NULL, $idsOnly = false, $inkluderaArkiverade = false){
-		//print "<p>BOKNING getall (call ".Self::$DEV_getAllCalls.")</p>";
-		
-		if($inkluderaArkiverade){
-			$end_where = self::FN_ARKIVERAD." = true";
-		} else {
-			$end_where = self::FN_ARKIVERAD." = false";
-		}
-		
-		if(!empty($where)){
-			$where = " WHERE " . $where . " AND (" . $end_where . ")";
-		} else {
-			//$where = " WHERE " . $default_where;
-			$where = " WHERE " . $end_where;
-		}
-		
-		$q = "SELECT * FROM ".self::TABLE." $where ORDER by ".self::FN_DATUM;
-		//print "<p>$q</p>";
-	
-		$result = mysqli_query(Config::$DB_LINK, $q);
-		if(!$result){
-			debugLog("<strong>MYSL_QUERY-FEL!!</strong>, q:$q, fel: " . mysqli_error() , "BOKNING|getAllAsArray");
-		}
-		
-		$list = array();
-		while($fieldArray = mysqli_fetch_assoc($result)){
-			$bokning = new Bokning($fieldArray);
-			array_push($list, $bokning);
-		}
-
-		Self::$DEV_getAllCalls++;
-		
-		return $list;
+	public static function getAddUrl(){
+		return "?".CONFIG::PARAM_NAV."=bokningar-add";
 	}
+
+	public static function getSaveUrl(){
+		return "?".CONFIG::PARAM_NAV."=bokningar-save";
+	}
+
 
 	public static function getAll($where = NULL, $idsOnly = false, $inkluderaArkiverade = false){
 		
 		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_DATUM.",".self::FN_ID, $inkluderaArkiverade);
-		//$list = array(new Kurs(Self::OSPEC_ID));
+		//print "<p> bokning_get_all num-rows: ".mysqli_num_rows($result)."</p>";
 		$list = [];
 
 		while($fieldArray = mysqli_fetch_assoc($result)){
 
 			if($idsOnly){
-				$bokning = $fieldArray[Self::makeUrlId($fieldArray[Self::FN_BOKID], $fieldArray[Self::FN_KURSID])];
+				$bokning = $fieldArray[self::FN_ID];
+				//print "$bokning ";
 			} else {
 				$bokning = new Bokning($fieldArray);
+				//print " *".$bokning->id;
 			}
 
-			array_push($list, $bokning);
+			if($bokning->isValid()){
+				array_push($list, $bokning);
+			}
 
 		}
 		
@@ -116,10 +95,10 @@
 		
 
 		if(empty($terminId)){
-			return self::getAll(Bok::FK_ID . " = '$bokId'");
+			return self::getAll(Bok::FK_ID . " = $bokId");
 		} else {
 			$kursIdsUnderTermin = Kurs::getAllIdsForTermin($terminId, $forLasar);
-			$where = Bok::FK_ID . " = '$bokId' AND (";
+			$where = Bok::FK_ID . " = $bokId AND (";
 			foreach($kursIdsUnderTermin as $kursId){
 				$where .= Kurs::FK_ID . " = '$kursId' OR ";
 			}
@@ -143,19 +122,18 @@
 		print "<p>Hallå! (helloStaticClass)</p>";
 	}
 
-	public static function makeUrlId($bokId, $kursId){
-		return $bokId . "|". $kursId;
+	// kollar om den exakta posten (id't) finns
+	public static function exists($id){
+		if(self::_countRows(self::TABLE, self::FN_ID . " = " . $id) > 0){
+			return true;
+		} else {
+			return false;
+		}
 	}
 
-	public static function parseUrlId($bokningsId){
-		$arr = explode("|", $bokningsId);
-		$id["bokId"] = $arr[0];
-		$id["kursId"] = $arr[1];
-		return $id;
-	}
-
-	public static function exists($bokningsId){
-		if(self::_countRows(self::TABLE, Self::FN_ID . "=".$bokningsId) > 0){
+	// kollar om bokningen - komb kurs-bok - finns
+	public static function bokningExists($bokId, $kursId){
+		if(self::_countRows(self::TABLE, self::generateWhere($bokId, $kursId)) > 0){
 			return true;
 		} else {
 			return false;
@@ -163,7 +141,7 @@
 	}
 
 	private static function generateWhere($bokId, $kursId){
-		return Self::FN_BOKID . "='".$bokId."' AND ".Self::FN_KURSID."='".$kursId."'";
+		return self::FN_BOKID . "='".$bokId."' AND ".self::FN_KURSID."='".$kursId."'";
 	}
    
    
@@ -173,8 +151,8 @@
 		if(isset($bokningAccFieldArray)){
 			$this->setFromAssoc($bokningAccFieldArray);
 		}
-		//print "<p>BOKNING created (#".Self::$DEV_created.")</p>";
-		Self::$DEV_created++;
+		//print "<p>BOKNING created (#".self::$DEV_created.")</p>";
+		self::$DEV_created++;
     }
 	
 	public function setFromAssoc($bokningAccFieldArray = NULL){
@@ -188,12 +166,33 @@
 			$this->datum = $bokningAccFieldArray[self::FN_DATUM];
 			$this->demo = $bokningAccFieldArray[self::FN_DEMO];
 			
+			// fix för om en bokning gått fel och har kurs/bok-id null i db
+			if($this->bokId == "null"){
+				$this->bokId = null;
+			}
+			if($this->kursId == "null"){
+				$this->kursId = null;
+			}
+
 			$this->generateProps();
 			
 			$this->isEmpty = false;
 		} else {
 			$this->isEmpty = true;
 		}
+	}
+
+	public function setFromData($kursId, $bokId, $bokare, $kommentar){
+
+		$this->kursId = $kursId;
+		$this->bokId = $bokId;
+		$this->bokare  = $bokare;
+		$this->kommentar = $kommentar;
+
+		$this->isEmpty = true;
+
+		$this->generateProps();
+			
 	}
 
 	public function setFromId($bokningsId){
@@ -210,12 +209,12 @@
 	}
 	
 	private function generateProps(){
-		//$this->id = Self::makeUrlId($this->bokId, $this->kursId);
-		//$this->where = Self::generateWhere($this->bokId, $this->kursId);
+		//$this->id = self::makeUrlId($this->bokId, $this->kursId);
+		//$this->where = self::generateWhere($this->bokId, $this->kursId);
 
 		$this->urlView =  "?" . CONFIG::PARAM_NAV . "=bokningar-view&" . Config::PARAM_REF_ID  . "=" . $this->id;
-		$this->urlEdit = "?".CONFIG::PARAM_PRIM_NAV."=bokningar-edit&".CONFIG::PARAM_REF_ID."=".$this->id;
-		$this->urlDelete = "?".CONFIG::PARAM_PRIM_NAV."=bokningar-delete&".CONFIG::PARAM_REF_ID."=".$this->id;
+		$this->urlEdit = "?".CONFIG::PARAM_NAV."=bokningar-edit&".CONFIG::PARAM_REF_ID."=".$this->id;
+		$this->urlDelete = "?".CONFIG::PARAM_NAV."=bokningar-delete&".CONFIG::PARAM_REF_ID."=".$this->id;
 	}
 	
 	/*
@@ -224,64 +223,27 @@
 
 	public function save(){
 
-		if($this->isValid()){
-			if($this->meExtists()){
-				// update
-				$q = "UPDATE " . self::TABLE . 
-				" SET " . 
-				self::FN_KURSID. "=" . $this->kursId . ", " .
-				self::FN_BOKID . "=" . $this->bokId . ", " .
-				self::FN_BOKARE . "='" . $this->bokare. "', " .
-				self::FN_KOMMENTAR . "='" . $this->kommentar. "', " .
-				self::FN_ARKIVERAD . "= " . $this->arkiverad. ", " . 
-				self::FN_DATUM . "='" . $this->datum. "', " .
-				self::FN_DEMO . "=" . $this->demo. " " .
-				"WHERE " . self::FN_ID . "=" . $this->id;
+		$dataArr[self::FN_KURSID] = "'" . $this->kursId . "'";
+		$dataArr[self::FN_BOKID] = "'" . $this->bokId . "'";
+		$dataArr[self::FN_BOKARE] = "'" . $this->bokare . "'";
+		$dataArr[self::FN_KOMMENTAR] = "'" . $this->kommentar . "'";
+		//$dataArr[self::FN_DATUM] = "'" . $this->datum . "'";
 
-				$ret = mysqli_query(Config::$DB_LINK, $q);
-				if ($ret === false){
-					throw new Exception("Något gick vid fel vid <strong>uppdatering</strong>.
-						<br>Query: $q
-						<br>DB Error: ".mysqli_connect_error(Config::$DB_LINK));
-				}
-			} else {
-				// add
-				$q = "INSERT INTO " . self::TABLE . 
-				" (" . 
-				self::FN_KURSID . ", " .
-				self::FN_BOKID . ", " .
-				self::FN_BOKARE . ", " .
-				self::FN_KOMMENTAR . ", " .
-				self::FN_ARKIVERAD . ", " .
-				self::FN_DATUM . ", " .
-				self::FN_DEMO .
-				")" .
-				" VALUES (" . 
-				$this->kursId . ", " .
-				$this->bokId . ", " .
-				"'" . $this->bokare . "', " .
-				"'" . $this->kommentar . "', " .
-				$this->arkiverad . ", " .
-				"'" . $this->datum . "', " .
-				$this->demo . ", " .
-				")";
-
-				$ret = mysqli_query(Config::$DB_LINK, $q);
-				if ($ret === false){
-					throw new Exception("Något gick vid fel vid <strong>skapande av post</strong>.
-						<br>Query: $q
-						<br>DB Error: ".mysqli_connect_error(Config::$DB_LINK));
-				}
-			}
+		if($this->arkiverad){
+			$arkiverad = 1;
 		} else {
-			throw new Exception("Informationsobjektet är inte komplett för sparande");
+			$arkiverad = 0;
 		}
+
+		$dataArr[self::FN_ARKIVERAD] = $arkiverad;
+
+		self::_save(self::TABLE, $this->id, $dataArr, $this->isValid(), $this->meExtists());
 
 	}
 
 	public function delete(){
 		if($this->isValid()){
-			$q = "DELETE FROM ".Self::TABLE . "WHERE " . $this->where;
+			$q = "DELETE FROM ".self::TABLE . "WHERE " . $this->where;
 			print "RADERAR BOKNING $q";
 			/*if(mysqli_query(Config::$DB_LINK, $q) == 1){
 				return true;
@@ -304,7 +266,7 @@
 	}
 
 	private function meExtists(){
-		return Self::exists($this->id);
+		return self::exists($this->id);
 	}
 }
 ?>

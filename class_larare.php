@@ -28,9 +28,9 @@
 		Statics
 	*/
 	
-	public static function getAll($where = NULL, $inkluderaArkiverade = false){
+	public static function getAll($where = NULL){
 		
-		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_EFTERNAMN, $inkluderaArkiverade);
+		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_ID, true);
 
 		$list = array();
 		while($fieldArray = mysqli_fetch_assoc($result)){
@@ -45,12 +45,44 @@
 	public static function getAllAsSelectAssoc($where = NULL, $inkluderaArkiverade = false){
 		
 		$list = [];
-		foreach(Self::getAll($where) as $larare){
-			$list[$larare->id] = $larare->namn;
+		foreach(self::getAll($where) as $larare){
+			if(!empty($larare->id)){
+				$list[$larare->id] = $larare->namn;
+			}
 		}
 		
 		return $list;
 	}
+
+	public static function getSelectHTML($fieldDescription = "", $selectedId = "", $elementId = "select-larare"){
+		$larare = self::getAll();
+		$larareSelectArr = [];
+
+		foreach($larare as $lar){
+			if(!empty($lar->id)){
+				$larareSelectArr[$lar->id] = $lar->namn;
+			}
+		}
+
+		return HTML_FACTORY::getAssocArrayAsSelectHTML($larareSelectArr, $elementId, "Välj en lärare...", "Bokningslärare", $fieldDescription, $selectedId, "300", $elementId);
+	}
+
+	public static function importSave($id, $fnamn, $enamn){
+		
+		if(!self::_rowExist(self::TABLE, self::FN_ID, $id, true)){
+
+			$dataArr[self::FN_ID] = "'" . $id . "'";
+			$dataArr[self::FN_FORNAMN] = "'" . $fnamn . "'";
+			$dataArr[self::FN_EFTERNAMN] = "'" . $enamn . "'";
+
+			self::_save(self::TABLE, $id, $dataArr, true, false);
+
+			return "Lärare med id $id IMPORTERAD";
+		} else {
+			return "Lärare med id $id finns redan. INTE importerad.";
+		}
+	}
+
 
 	public static function antal(){
 		return _countRows(self::TABLE);

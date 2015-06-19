@@ -40,19 +40,34 @@ class Lasar {
 	}
 
 
-    public static function getTabsHTML($nav_value, $activeTidId){
-    	return Termin::_getTerminNavHTML($nav_value, "nav nav-tabs", $activeTidId, true);
+    public static function getTabsHTML($nav_value, $activeTidId, $useLasar = true){
+    	return Termin::_getTerminNavHTML($nav_value, "nav nav-tabs", $activeTidId, $useLasar);
+    }
+
+    public function getFirstTermin(){
+    	$termin = new Termin($this->startYear, "ht");
+    	return $termin;
+    }
+
+    public function getLastTermin(){
+    	$termin = new Termin($this->startYear, "vt");
+    	return $termin;
     }
 
     public function getFirstTerminId(){
-    	$first = new Termin($this->startYear, "ht");
-    	return $first->id;
+    	$termin = $this->getFirstTermin();
+    	return $termin->id;
     }
 
+    public function getLastTerminId(){
+    	$termin = $this->getLastTermin();
+    	return $termin->id;
+    }
 
-	public static function getCurrentLasarId(){
+	public static function getCurrentLasarId($modification = 0){
 		$t = date_create();
 		$yStart = date_format($t,"Y");
+		$yStart += $modification;
 		$w = date_format($t,"W");
 		
 		if($w < 26){
@@ -63,9 +78,9 @@ class Lasar {
 		return "$yStart-$yEnd";
 	}
 
-	public static function getCurrentLasar(){
+	public static function getCurrentLasar($modification = 0){
 		$currentLasar = new Lasar();
-		$currentLasar->setFromId(Self::getCurrentLasarId());
+		$currentLasar->setFromId(self::getCurrentLasarId($modification));
 		return $currentLasar;
 	}
 

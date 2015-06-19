@@ -38,6 +38,8 @@ switch($mode){
 		
 }
 
+//print "<h1>$rubrik</h1>";
+
 if($mode == "delete"){
 	$bok = new Bok();
 	$bok->setFromId($_GET[Config::PARAM_REF_ID]);
@@ -66,7 +68,7 @@ if($mode == "delete"){
 	$antal = new Bokantal();
 	if(($mode != "add")&&($saveSuccess)){
 		$bok->setFromId($selectedBokId);
-		$antal = $bok->getAntalBokade();
+		//$antal = $bok->getAntalBokade();
 		//$bok = getBokArray($selectedBokId);
 	} 
 	//print $bok->toString();
@@ -114,8 +116,8 @@ if($mode == "delete"){
 				//print $dbDebug; 
 			} 
 		?>
-		<?php $action = "?".Config::PARAM_PRIM_NAV."=bocker&".Config::PARAM_SEC_NAV."=save" ?>
-		<form id="form-bocker" method="post" action="<?php print $action ?>">
+	
+		<form id="form-bocker" method="post" action="<?php print $bok->urlSave ?>">
 		<input type="hidden" id="form-mode" name="form-mode" value="idle" />
 		
 		<?php
@@ -176,14 +178,7 @@ if($mode == "delete"){
 
 </div>
 <?php 
-	if($mode != "add" && $mode != "delete"){
-		if(0 < $antal->bokade){
-			$bokningsHTML = HTML_FACTORY::getBokningarHTML(Bok::FK_ID . " = '" . $bok->isbn . "'");
-			HTML_FACTORY::printPanel("default", "Bokingar för boken", $infoContent);
-		} else {
-			HTML_FACTORY::printPanel("default", "Bokingar för boken", "<em>Boken har inga bokningar</em>");
-		}
-	}
+	//HTML_FACTORY::printPanel("default", "Bokingar för boken", "<em>Boken har inga bokningar</em>");
 
 function displayValue($value){
 	if(empty($value)){

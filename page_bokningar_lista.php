@@ -1,34 +1,41 @@
-<?php
-	global $CONFIG;
-	
-	$output = HTML_FACTORY::getBokningarHTML();
-	$rubrik = "Bokningar";
-	
-	/*if(isset($_GET[$CONFIG["refTypParam"]])&&isset($_GET[$CONFIG["refIdParam"]])){
-		switch($_GET[$CONFIG["refTypParam"]]){
-			case "bok":
-				$output = getBokningarForBockerHTML($_GET[$CONFIG["refIdParam"]]);
-				$rubrik = "Bokningar för boken " . getShortBokTitelFromId($_GET[$CONFIG["refIdParam"]]);
-				break;
-			case "kurs":
-				$output = getBokningarForKurserHTML($_GET[$CONFIG["refIdParam"]]);
-				$rubrik = "Bokningar för kursen " . $_GET[$CONFIG["refIdParam"]];
-				break;
-		}
-	}*/
+<?php 
+	require_once("class_termin.php");
+	require_once("class_lasar.php");
 ?>
+
+
 <div class="page-header">
-	<h1><?php print $rubrik; ?></h1>
+	<h1>Bokningar</h1>
 </div>
 <?php
-	//if(isAdmin()){
-		print "<p>".HTML_FACTORY::getKnappHTML("bokningar-add", "Gör en bokning", "lg", "success", "Skapa en bokning")."</p>";
-	//}
+	if(isLoggedIn()){
+		print "<p>".HTML_FACTORY::getKnappHTML("?".Config::PARAM_NAV."=bokningar-add", "Gör en bokning", "lg", "success", "Skapa en bokning")."</p>";
+	}
+	if(isset($_GET[Config::PARAM_ID])){
+		$activeTermin = new Termin();
+		$activeTermin->setFromId($_GET[Config::PARAM_ID]);
+	} else {
+		if(Config::SIMPLE_MODE){
+			$lasar = Lasar::getCurrentLasar(1);
+			$activeTermin= $lasar->getFirstTermin();
+		} else {
+			$activeTermin= Termin::getCurrentTermin();
+		}
+	}
+
+	if(Config::SIMPLE_MODE){
+		print Termin::getTabsHTML("bokningar", $activeTermin->id);
+	}
+
+	$output = HTML_FACTORY::getBokningarHTML($activeTermin);
+
+HTML_FACTORY::printWarningAlert("OBS", "Bara biblioteket kan ta bort eller redigera en bokning, Detta för förhindra misstag. Eposta biblioteket eller martin.nilsson@karlstad.se om en bokning behöver ändras (ange bok och kurs)");
+
+if(!Config::SIMPLE_MODE){
+	print Lasar::getTabsHTML("bokningar", $activeTermin->lasar->id, true);
+}
+
+
 ?>
-<div class="info-box">
-<p>Välj en bokning för att se detaljer för den. Bara biblioteket kan ta bort eller redigera en bokning.</p>
-<?php if(isAdmin()){ ?>
-<p><strong>Administratör</strong>: Du kan radera och redigera bokningen på dess detaljsida</p> 
-<?php } ?>
-</div>
+
 <?php print $output; ?>

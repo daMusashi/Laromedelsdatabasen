@@ -7,7 +7,7 @@
 	require_once("config.php");
 	require_once("db_connect.php");
 	require_once("admin/db_update_functions.php");
-	require_once("class_kurs.php");
+	//require_once("class_kurs.php");
 ?>
 <style>
 .warning {
@@ -23,17 +23,17 @@
 	
 	
 
-	////addTimeToKurser();
-	////moveTimeToKurser();
+	addTimeToKurser();
+	moveTimeToKurser();
 	
-	//renameBokningar();
-	//removeTimeFromBokningar(); 
-	//createIds();
-	//createNewIdsBinds();
+	renameBokningar();
+	removeTimeFromBokningar(); 
+	createIds();
+	createNewIdsBinds();
 
 
 	/* dev-data */
-	createRandomKurser(20);
+	//createRandomKurser(20);
 ?>
 </body>
 </html>

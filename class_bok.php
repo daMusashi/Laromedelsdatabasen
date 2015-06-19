@@ -3,6 +3,7 @@
 	require_once("class_abstract_dataobject.php");
 	require_once("class_kurs.php");
 	require_once("class_bokning.php");
+	require_once("class_html_factory.php");
 	
 	class Bok extends Dataobject
 	{
@@ -55,6 +56,18 @@
    	/*
 		Statics
 	*/
+	
+	public static function getSelectHTML($fieldDescription = "", $selectedId = "", $elementId = "select-bok"){
+		$bocker = self::getAll();
+		$bockerSelectArr = [];
+
+		foreach($bocker as $bok){
+			$bockerSelectArr[$bok->id] = $bok->fullTitel;
+		}
+
+		return HTML_FACTORY::getAssocArrayAsSelectHTML($bockerSelectArr, $elementId, "Välj en bok...", "Bok", $fieldDescription, $selectedId, "300", $elementId);
+	}
+
 	public static function getAntalTitlar($inkluderaArkiverade = false){
 		$where = "WHERE ".self::FN_ARKIVERAD." = false";
 		if($inkluderaArkiverade){
@@ -64,9 +77,9 @@
 		return _countRows(self::TABLE, $where);
 	}
 	
-	public static function getAll($where = NULL, $inkluderaArkiverade = false){
+	public static function getAll($where = NULL){
 		
-		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_TITEL, $inkluderaArkiverade);
+		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_TITEL, true);
 		
 		$list = array();
 		while($fieldArray = mysqli_fetch_assoc($result)){
@@ -75,6 +88,17 @@
 		}
 		
 		return $list;
+	}
+
+	public static function getAllIds($where = NULL){
+		
+		$bocker = getAll($where);
+		$ids = [];
+		foreach($list as $bok){
+			array_push($ids, $bok->id);
+		}
+		
+		return $ids;
 	}
 	
 	public static function helloStaticClass(){
@@ -97,10 +121,10 @@
 	
 		$this->fullTitel = $this->getFullBokTitel();
 
-		$this->urlSave = "?".CONFIG::PARAM_PRIM_NAV."=bocker-save";
-		$this->urlView = "?".CONFIG::PARAM_PRIM_NAV."=bocker-view&".CONFIG::PARAM_REF_ID."=".$this->isbn;
-		$this->urlEdit = "?".CONFIG::PARAM_PRIM_NAV."=bocker-edit&".CONFIG::PARAM_REF_ID."=".$this->isbn;
-		$this->urlDelete = "?".CONFIG::PARAM_PRIM_NAV."=bocker-delete&".CONFIG::PARAM_REF_ID."=".$this->isbn;
+		$this->urlSave = "?".CONFIG::PARAM_NAV."=bocker-save";
+		$this->urlView = "?".CONFIG::PARAM_NAV."=bocker-view&".CONFIG::PARAM_REF_ID."=".$this->id;
+		$this->urlEdit = "?".CONFIG::PARAM_NAV."=bocker-edit&".CONFIG::PARAM_REF_ID."=".$this->id;
+		$this->urlDelete = "?".CONFIG::PARAM_NAV."=bocker-delete&".CONFIG::PARAM_REF_ID."=".$this->id;
 		$this->urlBoka = "?" . CONFIG::PARAM_NAV. "=bokningar-add&".CONFIG::PARAM_REF_TYP . "=bok&".CONFIG::PARAM_REF_ID . "=".$this->isbn;
 	}
 	
@@ -273,12 +297,13 @@
 	public function getAntalBokade($terminId, $forLasar = false){
 		//print "<h4>Bok::getAntalBokade</h4>";
 		$num = 0;
-		// TODO få en id-lista istället för objekt
+
+		//print "<p>bok.getAntalBokade bokid[".$this->id."]";
 		$bokningarForBok = Bokning::getForBok($this->id, $terminId, $forLasar); //getForBok($this->isbn);
+		//print "<p>Antal bokningar: ".count($bokningarForBok)."</p>";
 		foreach($bokningarForBok as $bokning){
-			//print "<br>--b kursId=".$bokning->kursId;
-			//$kurs = new Kurs($bokning->kursId);
 			$num = $num + Kurs::getAntalElever($bokning->kursId);
+			//print "<p>elever/böcker: $num</p>";
 		}
 		return new Bokantal($this->antal, $num);
 	}
@@ -289,57 +314,7 @@
 		//return $this->antal - antalBokade();
 	//}
 	
-	public function getHtmlTdSnippet($index, $terminId, $forLasar = false, $linkBokning = false, $bokningsKursId = null){ // om bokning måste kursId med
-		
-		//if(empty($antalBokadeObj)){
-			$antal = $this->getAntalBokade($terminId, $forLasar);
-		//} else {
-			//$antal = $antalBokadeObj;
-		//}
-
-		$collapseHTML = "";
-		$collapseId = "bok-info-$index";
-
-		if(isLoggedIn()){
-			
-			
-			$collapseHTML .= "<div class=\"collapse bok-info\" id=\"$collapseId\">";
-			$collapseHTML .= "<p>Bokade: <strong>" . $antal->bokade . "</strong> av " . $antal->antal . "</p>";
-			$collapseHTML .= "<div class=\"btn-group btn-group-sm\" role=\"group\">";
-			if($linkBokning){
-				// bokningsknappar
-				$bokningsId = Bokning::makeUrlId($this->id, $bokningsKursId);
-				$collapseHTML .= $this->getHtmlButton($label = "Visa bokning", $type = "primary", $link = "?" . CONFIG::PARAM_NAV. "=bokningar-view&".CONFIG::PARAM_REF_ID . "=$bokningsId");
-				if(isAdmin()){
-					$collapseHTML .= $this->getHtmlButton($label = "Redigera bokning", $type = "warning", $link = "#");
-					$collapseHTML .= $this->getHtmlButton($label = "Radera bokning", $type = "danger", $link = "#");
-				}
-			} else {
-				// bokknappar
-				$collapseHTML .= $this->getHtmlButton($label = "Visa bok", $type = "primary", $link = $this->urlView);
-				if(isAdmin()){
-					$collapseHTML .= $this->getHtmlButton($label = "Redigera bok", $type = "warning", $this->urlEdit);
-					$collapseHTML .= $this->getHtmlButton($label = "Radera bok", $type = "danger", $link = $this->urlDelete);
-				}
-			}
-			$collapseHTML .= "</div></div>";
-		}
 	
-
-		$html = "<div class=\"bok-titel\">";		
-			if(isLoggedIn()){
-				$html .= "<a data-toggle=\"collapse\" href=\"#$collapseId\" aria-expanded=\"false\" aria-controls=\"$collapseId\" class=\"titel-link collapsed\">";
-					$html .= "<strong>" . $this->fullTitel . "</strong>";
-				$html .= "</a>";
-			} else {
-				$html .= "<strong>" . $this->fullTitel . "</strong>";
-			}
-		$html .= "</div>";
-		$html .= $collapseHTML;
-
-		return $html;
-
-	}
 	
 	public function getForfattarNamn(){
 		return $this->forf_fornamn . " " . $this->forf_efternamn;
@@ -361,12 +336,7 @@
 		return $this->titel . "$undertitel$upplaga";
 	}
 
-	/*
-	Privates
-	 */
-	private function getHtmlButton($label = "#", $type = "primary", $link = "#"){
-		return "<a class=\"btn btn-$type btn-sm\" href=\"$link\" role=\"button\">$label</a>";
-	}
+
 }
 
 class Bokantal {

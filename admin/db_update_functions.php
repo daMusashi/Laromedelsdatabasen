@@ -176,6 +176,8 @@ function createIds(){
   		print "<p>KLAR</p>";
   	}
 
+	/* TAR BORT LÄGGA TILL EGET ID PÅ KURSER _ DÅLIG IDE PGA IMPORT
+
 	// kurser
 	print "<h3>Kurser</h3>";
 	print "<p>Tar bort existerande PK</p>";
@@ -203,6 +205,7 @@ function createIds(){
   	} else {
   		print "<p>KLAR</p>";
   	}
+  	*/
 }
 
 // "binder om" nya ids
@@ -220,11 +223,15 @@ function createNewIdsBinds(){
 		$bok = new Bok();
 		$bok->setFromISBN($bokning->bokId);
 
+		/* TAR BORT LÄGGA TILL EGET ID PÅ KURSER _ DÅLIG IDE PGA IMPORT
 		$kurs = new Kurs();
 		$kurs->setFromName($bokning->kursId);
 
-		$bokning->bokId = $bok->id;
 		$bokning->kursId = $kurs->id;
+		*/
+	
+		$bokning->bokId = $bok->id;
+		
 
 		//$bokning->save();
 		print "<h2>bokning-id: ".$bokning->id . "</h2>";
@@ -293,7 +300,7 @@ function createRandomKurser($antal, $minLasar = 2014, $maxLasar = 2017){
 
 		$k->setFromDataToSave("TEST KURS $i", "$startLasar:$startTermin", "$slutLasar:$slutTermin");
 
-		print "<h3>Skapa kurs ".$k->namn."</h3>";
+		print "<h3>Skapa kurs ".$k->id."</h3>";
 		try {
 			$k->save();
 			print "<p>SKAPAD $startLasar $slutLasar</p>";

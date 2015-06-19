@@ -15,13 +15,13 @@
 <div id="tab-kurser" class="tab">
 	<h2>Så här gör du en bokning</h2>
 	<div class="help-bokning" id="help-bokning-1">
-   	  <p>Du kan bara boka <strong>en bok åt gången</strong>, och du kan bara boka en bok <strong>åt en kurs åt gången</strong>. Du börjar bokning genom att öppna <strong>bokningsformuäret</strong>.</p>
+   	  <p>Du kan bara boka <strong>en bok åt gången</strong>, och du kan inte boka samma  boka till samma kurs flera gånger. Du gör en bokning i <strong>bokningsformuläret</strong>. Du kan öppna bokningsformuläret på flera sätt, se nedan.</p>
    	  <h3>Öppna bokningsformuläret</h3>
         <p>Du kan öppna bokningsformuläret på flera sätt</p>
         <ul>
-          <li>I <strong>boklistan</strong> (<a href="http://lampan.karlstad.se/~laromedel/?a=bocker">Böcker-fliken</a>), klicka på <strong>boka-knappen</strong> bredvid en bok du vill boka. Bokningsformuläret visas med boken förvald. Böcker som inte är bokningsbara, p.g.a. alla exemplar redan är bokade, har ingen bokningsknapp.</li>
-          <li>I <strong>kurslistan</strong> (<a href="http://lampan.karlstad.se/~laromedel/?a=kurser">Kurser-fliken</a>), klicka på <strong>boka-knappen</strong> bredvid en kurs du vill boka en bok till. Bokningsformuläret visas med kursen förvald.</li>
-          <li>Överst i <strong>bokningslistan</strong> (<a href="http://lampan.karlstad.se/~laromedel/?a=bokningar">Bokningar-fliken</a>), klicka på <strong>knappen &quot;Gör en bokning&quot;</strong>. Bokningsformuläret visas utan några förval.</li>
+          <li>I <strong>boklistan</strong> (&quot;Böcker&quot;-fliken<a href="http://lampan.karlstad.se/~laromedel/?a=bocker"></a>), klicka på <strong>boka-knappen</strong> bredvid en bok du vill boka. Vald bok kommer att vara förvald i bokningsformuläret.</li>
+          <li>I <strong>kurslistan</strong> (&quot;Kurser&quot;-fliken), klicka på <strong>boka-knappen</strong> bredvid en kurs du vill boka en bok till. Vald kurs kommer att vara förvald i bokningsformuläret.</li>
+          <li>Överst i <strong>bokningslistan</strong> (&quot;Bokningar&quot;-fliken), klicka på <strong>knappen &quot;Gör en bokning&quot;</strong>. Bokningsformuläret visas utan några förval.</li>
         </ul>
     </div>
     <div class="help-bokning" id="help-bokning-2">
@@ -30,9 +30,6 @@
         <ul>
           <li><strong>Bok</strong>. Välj boken du vill boka i listan. <strong>OBS</strong> har du startat boknngen från en bok i boklistan är boken redan förvald.</li>
           <li><strong>Kurs</strong>. Välj kursen du vill boka boken till. Kurserna beskrivs med <strong>kurskoder</strong>, se mer om dom i <strong>nästa hjälp-flik</strong> (fliken &quot;Kurskoder&quot;). <strong>OBS</strong> har du startat boknngen från en kurs i bokkurs är kursen redan förvald.</li>
-          <li><strong>Läsår</strong>. Välj det läsår för vilket bokningen gäller. Du behöver i regel inte ändra det automatiskt valda föreslagna värdet (höst: aktuellt läsårs, vår nästkommande läsår).</li>
-          <li><strong>Utlåningstillfälle</strong>. Välj vid vilket tillfälle <strong>eleverna</strong> <strong>ska hämta ut boken</strong>.</li>
-          <li><strong>Återlämningstillfälle</strong>. Välj vid vilket tillfälle eleverna tidigast kan <strong>lämna tillbaka boken</strong>.</li>
           <li><strong>Bokningslärare</strong>. Ange vem du är; läraren som gör bokningen. <strong>OBS</strong> Vilken lärare som <strong>undervisar</strong> i kursen ska <strong>inte</strong> anges här, utan bokningsläraren (dessa kan dock vara samma person förstås). Detta för att biblioteket ska veta vem man ska vända sig till med frågor kring bokningen.</li>
           <li><strong>Kommentar</strong>. Om du som bokare vill spara med extrainformation som läromedelsutlåningen behöver veta, skriv den här. Den här information är den enda man kan låta bli att fylla i.</li>
         </ul>
@@ -59,9 +56,9 @@
 <div id="tab-elever">
 	<h2>Kontakt för ytterligare hjälp</h2>
 	<h3>Användning och ändring av uppgifter (böcker och bokningar)</h3>
-	<p>Hellen Andersson, Biblioteket, ???, ???</p>
+	<p>Hellen Andersson, Biblioteket</p>
 	<h3>Fel i applikationen, förslag på ändringar</h3>
-	<p>Martin Nilsson, TIME, 054-540 19 34, martin.nilsson@karlstad.se</p>
+	<p>Martin Nilsson, TIME, 0704-64 64 23 (privat), martin.nilsson@karlstad.se</p>
 </div>
 
 </div>

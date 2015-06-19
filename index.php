@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="css/bootstrap.css">
 <link rel="stylesheet" href="css/laromedel.css">
 <!-- Latest compiled and minified JavaScript -->
+<link rel="stylesheet" href="css/temporary.css">
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 
 </head>

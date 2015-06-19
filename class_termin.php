@@ -13,7 +13,11 @@ Class Termin {
 	public $desc = ""; // genereras
 	public $descLong = ""; // genereras
 	public $value = 0; // genereras - samma som year men som int, används för storleksjämförelser
+	public $useAsLasar = false; // AFör att markera om bara läsårets ska användas när passas till funktioner
 	public $terminTypDesc = ""; // genereras
+
+	public $hamtasDesc = ""; // genereras - text för lämnas ut-tillfälle
+	public $lamnasDesc = ""; // genereras - text för lämnas in-tillfälle
 	
 
 	// Konstruktor
@@ -37,7 +41,7 @@ Class Termin {
 	}
 
     public function setFromId($terminId){
-    	$ids = Self::parseId($terminId);
+    	$ids = self::parseId($terminId);
     	$lasar = new Lasar();
     	$lasar->setFromId($ids["lasar"]);
 
@@ -52,14 +56,19 @@ Class Termin {
 
     	$tv = "0";
     	$tDesc = "HÖST";
+    	$tillfalleText = " höstterminen ";
+
     	if($this->terminTyp == "vt"){ 
     		$tv = "1";
     		$tDesc = "VÅR";
+    		$tillfalleText = " vårterminen ";
     	}
     	
     	$this->value = (int)$this->lasar->value.$tv;
     	$this->desc = $this->lasar->descShort.":".$tDesc;
     	$this->descLong = $this->lasar->desc." - ".$tDesc;
+    	$this->hamtasDesc = "START".$tillfalleText.$this->lasar->descShort;
+    	$this->lamnasDesc = "SLUT".$tillfalleText.$this->lasar->descShort;
     }
 
     public static function getAll(){
@@ -83,7 +92,7 @@ Class Termin {
 
     public static function _getTerminNavHTML($nav_value, $typClass, $activeTidId, $isLasar = false){
 
-		$terminer = Self::getAll();
+		$terminer = self::getAll();
 
 		$lasar = [];
 
@@ -110,6 +119,8 @@ Class Termin {
 			}
 		}
 
+		ksort($lasar);
+
 		foreach($lasar as $nav){
 			$html .=  $nav;
 		}
@@ -120,7 +131,7 @@ Class Termin {
     }
 
     public static function getTabsHTML($nav_value, $activeTidId){
-    	return Self::_getTerminNavHTML($nav_value, "nav nav-tabs", $activeTidId);
+    	return self::_getTerminNavHTML($nav_value, "nav nav-tabs", $activeTidId);
     }
 
     public static function _obselute_getTerminSelectHTML($nav_value, $activeTidId){
@@ -129,7 +140,7 @@ Class Termin {
     			Byt termin <span class=\"caret\"></span>
   			</button>
     	";
-    	$html .= Self::_getTerminNavHTML($nav_value, "dropdown-menu", $activeTidId, false);
+    	$html .= self::_getTerminNavHTML($nav_value, "dropdown-menu", $activeTidId, false);
     	$html .= "</div>";
 
     	return $html;
@@ -141,7 +152,7 @@ Class Termin {
     			<span class=\"glyphicon glyphicon-chevron-down\"></span>
   			</button>
     	";
-    	$html .= Self::_getTerminNavHTML($nav_value, "dropdown-menu", $terminObj->id, false);
+    	$html .= self::_getTerminNavHTML($nav_value, "dropdown-menu", $terminObj->id, false);
 
     	return $html;
     }

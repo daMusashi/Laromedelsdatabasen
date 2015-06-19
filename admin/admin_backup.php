@@ -1,19 +1,19 @@
 <?php
-global $CONFIG;
+include("db_backup_functions.php");
 
-include("backup_functions.php");
-
-if(isset($_GET[$CONFIG["refIdParam"]])){
-	$mode = $_GET[$CONFIG["refIdParam"]];
+if(isset($_GET[Config::PARAM_ID])){
+	$mode = $_GET[Config::PARAM_ID];
 } else {
 	$mode = "";
 }
 
+$baseuRL = "?".Config::PARAM_NAV."=admin-backup&".Config::PARAM_ID."=";
+
 ?>
 <h1>Backup</h1>
-<p><a href="?<?php print $CONFIG["primNavParam"]."=admin&". $CONFIG["secNavParam"]. "=backup&".$CONFIG["refIdParam"]."=allt" ?>">Gör backup på <strong>allt</strong></a></p>
-<p><a href="?<?php print $CONFIG["primNavParam"]."=admin&". $CONFIG["secNavParam"]. "=backup&".$CONFIG["refIdParam"]."=bocker" ?>">Gör backup på endast<strong>böcker</strong></a></p>
-<p><a href="?<?php print $CONFIG["primNavParam"]."=admin&". $CONFIG["secNavParam"]. "=backup&".$CONFIG["refIdParam"]."=bokningar" ?>">Gör backup på endast<strong>bokningar</strong></a></p>
+<p><a href="<?php print $baseuRL."allt" ?>">Gör backup på <strong>allt</strong></a></p>
+<p><a href="<?php print $$baseuRL."bocker" ?>">Gör backup på endast<strong>böcker</strong></a></p>
+<p><a href="<?php print $baseuRL."bokningar" ?>">Gör backup på endast<strong>bokningar</strong></a></p>
 <?php
 
 if($mode){

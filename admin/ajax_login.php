@@ -20,7 +20,7 @@ if(isset($_GET[Config::PARAM_AJAX])){
 					print "FALSE";	
 				}
 			} else {
-				print "ERROR Felaktiga login-parametrar";	
+				printAjaxError("Felaktig login-anrop", "Parameter sakans");	
 			}
 			break;
 		case "logout":
@@ -37,11 +37,11 @@ if(isset($_GET[Config::PARAM_AJAX])){
 			getLoginHTML();
 			break;
 		default:
-			print "ERROR Felaktiga login-funktion";
+			printAjaxError("Felaktig login-anrop", "[" . $_GET[Config::PARAM_AJAX]  . "]");
 			
 	}
 } else {
-	print "ERROR Saknad login-funktion";
+	printAjaxError("Felaktig login-anrop", "[" . Config::PARAM_AJAX  . "]");
 }
 			
 ?>

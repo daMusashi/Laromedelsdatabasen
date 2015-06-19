@@ -3,6 +3,12 @@
 // undersöker vilken config-nav GET-nav motsvaras av
 // Hittas ingen används förvald, $CONFIG["defaultPrimNav"] ("hemsidan")
 
+$default_nav = CONFIG::PARAM_DEFAULT_NAV;
+if(Config::SIMPLE_MODE){
+	$default_nav = CONFIG::PARAM_DEFAULT_NAV_SIMPLE_MODE;
+}
+
+
 if(isset($_GET[CONFIG::PARAM_NAV])){
 	$_SESSION["currentNavKey"] = false;
 	foreach($NAV as $key => $navItem){
@@ -12,11 +18,11 @@ if(isset($_GET[CONFIG::PARAM_NAV])){
 	}
 	// Om felaktig GET-nav
 	if(!$_SESSION["currentNavKey"]){
-		$_SESSION["currentNavKey"] = CONFIG::PARAM_DEFAULT_NAV;
+		$_SESSION["currentNavKey"] = $default_nav;
 	}
 } else {
 	// Om ingen GET-nav
-	$_SESSION["currentNavKey"] = CONFIG::PARAM_DEFAULT_NAV;
+	$_SESSION["currentNavKey"] = $default_nav;
 }
 
 
@@ -24,35 +30,49 @@ if(isset($_GET[CONFIG::PARAM_NAV])){
 // Skapar menu-items, delar uppp i menyer, sorterar bort hidden och ej behöriga
 $menu = [];
 
+$whitelist = array_keys($NAV);
+if(Config::SIMPLE_MODE){
+	$whitelist = Config::$SIMPLE_MODE_NAVS;
+}
+
+//var_dump($whitelist);
+
 foreach ($NAV as $key => $item) {
-	
-	//print "<p>".$item["label"]."</p>";
-	if(($item["label"] != "<hidden>") && (isset($item["place"]))){
-		//print "<p>".$item["place"]."</p>";
-		if(!isset($menu[$item["place"]])){
-			$menu[$item["place"]] = [];
-		}
-		$item["key"] = $key;
 
+	//print "<p>item_label:".$item["label"]."</p>";
+	//print "<p>item_key:".$key."</p>";
 
-		switch($item["roll"]){
-			case "admin":
-				if(isAdmin()){
+	if(in_array($key, $whitelist)){
+
+		
+		if(($item["label"] != "<hidden>") && (isset($item["place"]))){
+			//print "<p>".$item["place"]."</p>";
+			if(!isset($menu[$item["place"]])){
+				$menu[$item["place"]] = [];
+			}
+			$item["key"] = $key;
+
+			
+			
+			switch($item["roll"]){
+				case "admin":
+					if(isAdmin()){
+						array_push($menu[$item["place"]], $item);
+					}
+					break;
+				case "dev":
+					if(isDev()){
+						array_push($menu[$item["place"]], $item);
+					}
+					break;
+				case "user":
+					if(isLoggedin()){
+						array_push($menu[$item["place"]], $item);
+					}
+					break;
+				default:
 					array_push($menu[$item["place"]], $item);
-				}
-				break;
-			case "dev":
-				if(isDev()){
-					array_push($menu[$item["place"]], $item);
-				}
-				break;
-			case "user":
-				if(isLoggedin()){
-					array_push($menu[$item["place"]], $item);
-				}
-				break;
-			default:
-				array_push($menu[$item["place"]], $item);
+			}
 		}
 	}
 
@@ -60,6 +80,11 @@ foreach ($NAV as $key => $item) {
 //var_dump($menu);
 // skriver ut navbar
 print "<nav  class=\"navbar navbar-default navbar-fixed-top\" id=\"nav-main\" role=\"navigation\">";
+
+print "<div class=\"branding\"><div  class=\"container\">";
+print "<h1>".Config::TITEL." <span class=\"version\">(v.".Config::VERSION.")</span></h1>";
+print "</div></div>";
+
 print "<div  class=\"container\">";
 
 print "<ul class=\"nav navbar-nav navbar-left\" role=\"menu\">";

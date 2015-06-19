@@ -21,26 +21,49 @@ class HTML_FACTORY {
 		print $html;
 	}
 
+	public static function printInfoAlert($titel, $content){
+		print self::getAlertHTML($titel, $content, "info");
+	}
 
-	private static function getKnappHTML_base($navValue, $label, $size = "", $flair="primary", $title = "", $submit = false, $submitParam = "save"){
+	public static function printWarningAlert($titel, $content){
+		print self::getAlertHTML($titel, $content, "warning");
+	}
+
+	public static function printErrorAlert($titel, $content){
+		print self::getAlertHTML($titel, $content, "danger");
+	}
+
+	public static function printDangerAlert($titel, $content){
+		print self::getAlertHTML($titel, $content, "danger");
+	}
+
+	public static function getAlertHTML($titel, $content, $flair = "primary"){
+		$html = "<div class=\"alert alert-$flair\">";
+		$html .= "<div><strong>$titel</strong> $content</div>";
+		$html .= "</div>";
+
+		return $html;
+	}
+
+	private static function getKnappHTML_base($url, $label, $size = "", $flair="primary", $title = "", $submit = false, $submitParam = "save"){
 
 		if($submit){
 			$html = "<a href=\"#\" class=\"btn btn-$flair btn-$size\" data-toggle=\"tooltip\" data-placement=\"right\" title=\"$title\" onclick=\"checkForm('$submitParam');\" role=\"button\">$label</a>";
 		} else {
-			$html = "<a href=\"?".CONFIG::PARAM_NAV."=$navValue\" class=\"btn btn-$flair btn-$size\" title=\"$title\" onclick=\"checkForm('$submitParam');\" role=\"button\">$label</a>";
+			$html = "<a href=\"$url\" class=\"btn btn-$flair btn-$size\" title=\"$title\" onclick=\"checkForm('$submitParam');\" role=\"button\">$label</a>";
 		}
 		
 		return $html;
 	}
 
-	public static function getKnappHTML($navValue, $label, $size = "", $flair = "primary", $title = ""){
+	public static function getKnappHTML($url, $label, $size = "", $flair = "primary", $title = ""){
 		
-		return Self::getKnappHTML_base($navValue, $label, $size, $flair, $title);
+		return self::getKnappHTML_base($url, $label, $size, $flair, $title);
 	}
 
 	public static function getSubmitKnappHTML($label, $size = "", $flair = "success", $submitParam = "save", $title = ""){
 
-		return Self::getKnappHTML_base("", $label, $size, $flair, $title, true, $submitParam);
+		return self::getKnappHTML_base("#", $label, $size, $flair, $title, true, $submitParam);
 	}
 
 	public static function getBokaKnappHTML($size = "", $referensTyp = "", $referensID = "", $title = "Gör en bokning!"){
@@ -50,61 +73,67 @@ class HTML_FACTORY {
 			$ref="&".CONFIG::PARAM_REF_TYP."=".$referensTyp."&".CONFIG::PARAM_REF_ID."=".$referensID;
 		}
 		
-		return Self::getKnappHTML("bokningar-add&".$ref, "Boka", $size, "success", $title);
+		return self::getKnappHTML("?".Config::PARAM_NAV."=bokningar-add&".$ref, "Boka", $size, "success", $title);
 	}
 
 
-	public static function getBokningarHTML($where = "", $orderOn = ""){
+	public static function getBokningarHTML($terminObj, $where = "", $orderOn = ""){
 
-		$bokningar = Bokning::getAll($where);
-		
-		if(!isAdmin()){
-			print "<div class=\"alert alert-warning\">
-				<p>OBSERVERA!! Bokningar kan bara ändras eller tas bort av biblioteket. Detta för att förhindra att felaktigheter uppstår av misstag.</p>
-				<p>KOntakt biblioteket om du vill ha något ändrat</p></div>";
+		$kurserInTermin = Kurs::getAllForTermin($terminObj->id);
+		//print "<p>factory: getbokningarHTML antal kurser:".count($kurserInTermin)."</p>";
+		$bokningar = [];
+
+		foreach ($kurserInTermin as $kurs) {
+			$bokningar = array_merge($bokningar, Bokning::getForKurs($kurs->id));
 		}
+
 		
 		$hover = "";
 		if(isLoggedin()){ 
 			$hover = " table-hover";
 		}
-		$html = "<table class=\"table main$hover table-striped bockningar\">
-					<thead><tr>
-						<th>Bok</th>
-						<th>Antal</th>
-						<th><span class=\"slut\">Överbokad</span></th>
-						<th>Kurs</th>
-						<th>Hämtas<br />ut</th>
-						<th>Lämnas<br />in</th>
-						<th>Bokad</th>
-						<th>Bokare</th>
-					</tr></thead>
-					<tbody>";
+		$html = "<table class=\"table main$hover table-striped bockningar\"><thead><tr>";
+		$html .= "<th>Kurs</th>";
+		$html .= "<th>Bok</th>";
+		if(!Config::SIMPLE_MODE){
+			$html .= "<th>Antal</th>";
+			$html .= "<th><span class=\"slut\">Överbokad</span></th>";
+			$html .= "<th>Hämtas<br />ut</th>";
+			$html .= "<th>Lämnas<br />in</th>";
+		}
+		$html .= "<th>Bokad</th>";
+		$html .= "<th>Bokare</th>";
+		$html .= "</tr></thead><tbody>";
 
 
 		$index = 0;
 		foreach($bokningar as $bokning){
 			$bok = new Bok();
 			$bok->setFromId($bokning->bokId);
-			$antal = $bok->getAntalBokade();
+
+			$antalObj = $bok->getAntalBokade($terminObj->id);
+
 			$kurs = new Kurs();
 			$kurs->setFromId($bokning->kursId);
 	
-			if($antal->bokade > $antal->antal){
-				$overBooked = "<span class=\"slut\">ÖVERBOKAD med " . $antal->bokbara. "</span>";
+			if(!$antalObj->bokbar){
+				$overBooked = "<span class=\"slut\">ÖVERBOKAD med " . $antalObj->bokbara. "</span>";
 			} else {
 				$overBooked = "";
 			}
 			
 			$html = $html .  "<tr>";
 			
+			$html = $html .  "<td class=\"major\">" . $bokning->kursId. "</td>";
 			$html = $html .  "<td class=\"major\">" . $bok->fullTitel . "</td>";
 			//$html = $html .  "<td>" . $bokning["bok_id"] . "</td>";
-			$html = $html .  "<td>" . $kurs->antalElever . "</td>";
-			$html = $html .  "<td>" . $overBooked . "</td>";
-			$html = $html .  "<td class=\"major\">" . $bokning->kursId. "</td>";
-			$html = $html .  "<td class=\"minor\">" . $bokning->utTillfalle->desc . "</td>";
-			$html = $html .  "<td class=\"minor\">" . $bokning->inTillfalle->desc . "</td>";
+			if(!Config::SIMPLE_MODE){
+				$html = $html .  "<td>" . Kurs::getAntalElever($kurs->id) . "</td>";
+				$html = $html .  "<td>" . $overBooked . "</td>";
+				
+				$html = $html .  "<td class=\"minor\">" . $kurs->startTermin->hamtasDesc . "</td>";
+				$html = $html .  "<td class=\"minor\">" . $kurs->slutTermin->lamnasDesc . "</td>";
+			}
 			$html = $html .  "<td class=\"minor\">" . $bokning->datum. "</td>";
 			$html = $html .  "<td>" . $bokning->bokare . "</td>";
 			//$html = $html .  "<td>" . getKnappHTML("bokningar&" . $CONFIG["secNavParam"] . "=view&" . $CONFIG["refIdParam"] . "=" . $bokning["bok_id"]. "," . $bokning["kurs_id"], "Detaljer", "button-orange", "Se all information om bokningen") . "</td>";
@@ -190,7 +219,7 @@ class HTML_FACTORY {
 
 	// Selecters
 
-	private static function getAssocArrayAsSelectHTML($assocArr, $selectName, $selectLabel = "Välj...", $fieldLabel = "", $fieldDescription = "", $selectedKey = "", $width = "", $elementId = ""){
+	public static function getAssocArrayAsSelectHTML($assocArr, $selectName, $selectLabel = "Välj...", $fieldLabel = "", $fieldDescription = "", $selectedKey = "", $width = "", $elementId = ""){
 		if($elementId == ""){
 			$elementId = $selectName;
 		}
@@ -223,36 +252,36 @@ class HTML_FACTORY {
 	} // getInutTillfallenAsAssocArray
 
 	public static function getSelectKursHTML($fieldDescription = "", $selectedId = "", $elementId = "select-kurs"){
-		return Self::getAssocArrayAsSelectHTML(Kurs::getAllAsSelectAssoc(), $elementId, "Välj en kurs...", "Kurs", $fieldDescription, $selectedId, "180", $elementId);
+		return self::getAssocArrayAsSelectHTML(Kurs::getAllAsSelectAssoc(), $elementId, "Välj en kurs...", "Kurs", $fieldDescription, $selectedId, "180", $elementId);
 	}
 
 	/*public static function getSelectKursWithBokningarHTML($fieldDescription = "", $selectedId = "", $elementId = "select-kurs"){
-		return Self::getAssocArrayAsSelectHTML(Kurs::getAllAsSelectAssoc(""), $elementId, "Välj en kurs...", "Kurs", $fieldDescription, $selectedId, "", $elementId);
+		return self::getAssocArrayAsSelectHTML(Kurs::getAllAsSelectAssoc(""), $elementId, "Välj en kurs...", "Kurs", $fieldDescription, $selectedId, "", $elementId);
 	}*/
 
 	public static function getSelectBokHTML($fieldDescription = "", $selectedId = "", $elementId = "select-bok"){
 		$selectArr = getAssocArray(getBockerAsArray(), "isbn", "fulltitel");
-		return Self::getAssocArrayAsSelectHTML($selectArr, $elementId, "Välj en bok...", "Bok", $fieldDescription, $selectedId, "300", $elementId);
+		return self::getAssocArrayAsSelectHTML($selectArr, $elementId, "Välj en bok...", "Bok", $fieldDescription, $selectedId, "300", $elementId);
 	}
 
 	public static function getSelectKlassHTML($fieldDescription = "", $selectedId = "", $elementId = "select-klass"){
 		$selectArr = getAssocArray(getKlasserAsArray(), "id", "id");
-		return Self::getAssocArrayAsSelectHTML($selectArr, $elementId, "Välj en klass...", "Klass", $fieldDescription, $selectedId, "", $elementId);
+		return self::getAssocArrayAsSelectHTML($selectArr, $elementId, "Välj en klass...", "Klass", $fieldDescription, $selectedId, "", $elementId);
 	}
 
 	public static function getSelectKlassWithBokningarHTML($fieldDescription = "", $selectedId = "", $elementId = "select-klass"){
 		$selectArr = getKlasserWithBokningarAsAssocArray();
 		//print_r($selectArr);
-		return Self::getAssocArrayAsSelectHTML($selectArr, $elementId, "Välj en klass...", "Klass", $fieldDescription, $selectedId, "", $elementId);
+		return self::getAssocArrayAsSelectHTML($selectArr, $elementId, "Välj en klass...", "Klass", $fieldDescription, $selectedId, "", $elementId);
 	}
 
 	public static function getSelectElevFromKlassHTML($klassId, $fieldDescription = "", $selectedId = "", $elementId = "select-elev"){
 		$selectArr = getAssocArray(getEleverFromKlassAsArray($klassId), "elevid", "fullNamn");
-		return Self::getAssocArrayAsSelectHTML($selectArr, $elementId, "Välj elev...", "Enskild elev från $klassId", $fieldDescription, $selectedId, "", $elementId);
+		return self::getAssocArrayAsSelectHTML($selectArr, $elementId, "Välj elev...", "Enskild elev från $klassId", $fieldDescription, $selectedId, "", $elementId);
 	}
 
 	public static function getSelectLarareHTML($fieldLabel = "Lärare", $fieldDescription = "", $selectedId = "", $elementId = "select-larare"){
-		return Self::getAssocArrayAsSelectHTML(Larare::getAllAsSelectAssoc(), $elementId, "Välj en lärare...", $fieldLabel, $fieldDescription, $selectedId, "180");
+		return self::getAssocArrayAsSelectHTML(Larare::getAllAsSelectAssoc(), $elementId, "Välj en lärare...", $fieldLabel, $fieldDescription, $selectedId, "180");
 	}
 
 	public function getSelectTillfalleHtml($fieldLabel = "Tillfälle", $fieldDescription = "", $selectedId = "", $isIn = false){
@@ -266,7 +295,7 @@ class HTML_FACTORY {
 			$selectArr[$tillfalle->id] = $tillfalle->desc;
 		}
 
-		return Self::getAssocArrayAsSelectHTML($selectArr, "select-tillfalle-$name", "Välj ett tillfälle...", $fieldLabel, $fieldDescription, $selectedId);
+		return self::getAssocArrayAsSelectHTML($selectArr, "select-tillfalle-$name", "Välj ett tillfälle...", $fieldLabel, $fieldDescription, $selectedId);
 	}
 
 	public static function getTextareaHTML($areaName, $fieldLabel = "", $fieldDescription = "", $value = "", $width = ""){
@@ -277,7 +306,7 @@ class HTML_FACTORY {
 		
 		$html = "<div class=\"field-container\" $width>";
 		if($fieldLabel != ""){
-			$html = $html . "<label for=\"$areaName\">$fieldLabel</label>";
+			$html = $html . "<label for=\"$areaName\">$fieldLabel</label><br>";
 		}
 		$html = $html . "<textarea id=\"$areaName\" name=\"$areaName\" class=\"form-field form-textarea\" $width >$value</textarea>";
 
@@ -286,6 +315,57 @@ class HTML_FACTORY {
 		}
 		$html = $html . "</div>";
 		return $html;
+	}
+
+
+	public static function getBokTdInfoSnippet($index, $bokObj, $antalObj = null, $bokningsObj = null){
+		
+
+		$collapseHTML = "";
+		$collapseId = "bok-info-$index";
+
+
+
+		if(isLoggedIn()){
+			
+			
+			$collapseHTML .= "<div class=\"collapse bok-info\" id=\"$collapseId\">";
+			if(!empty($antalObj)){
+				$collapseHTML .= "<p>Bokade: <strong>" . $antalObj->bokade . "</strong> av " . $antalObj->antal . "</p>";
+			}
+			$collapseHTML .= "<div class=\"btn-group btn-group-sm\" role=\"group\">";
+			if(!empty($bokningsObj)){
+				// bokningsknappar
+				$collapseHTML .= self::getKnappHTML($bokningsObj->urlView, "Visa bokning", "sm", "primary");
+				if(isAdmin()){
+					$collapseHTML .= self::getKnappHTML($bokningsObj->urlEdit, "Redigera bokning", "sm", "warning");
+					$collapseHTML .= self::getKnappHTML($bokningsObj->urlDelete, "Radera bokning", "sm", "danger");
+				}
+			} else {
+				// bokknappar
+				$collapseHTML .= self::getKnappHTML($bokObj->urlView, "Visa bok", "sm", "primary");
+				if(isAdmin()){
+					$collapseHTML .= self::getKnappHTML($bokObj->urlEdit, "Redigera bok", "sm", "warning");
+					$collapseHTML .= self::getKnappHTML($bokObj->urlDelete, "Radera bok", "sm", "danger");
+				}
+			}
+			$collapseHTML .= "</div></div>";
+		} 
+	
+
+		$html = "<div class=\"bok-titel\">";		
+			if(isLoggedIn()){
+				$html .= "<a data-toggle=\"collapse\" href=\"#$collapseId\" aria-expanded=\"false\" aria-controls=\"$collapseId\" class=\"titel-link collapsed\">";
+					$html .= "<strong>" . $bokObj->fullTitel . "</strong>";
+				$html .= "</a>";
+			} else {
+				$html .= "<strong>" . $bokObj->fullTitel . "</strong>";
+			}
+		$html .= "</div>";
+		$html .= $collapseHTML;
+
+		return $html;
+
 	}
 
 	// Widgets

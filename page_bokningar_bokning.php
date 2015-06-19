@@ -15,30 +15,23 @@ $kursId = "";
 
 switch($_GET[CONFIG::PARAM_NAV]){
 	case "bokningar-edit":
-		$rubrik = "Ändra bokningen";
-		$userNotice = "<div class=\"info-box\">Du kan <strong>inte</strong> ändra bok eller kurs i efterhand. Om kurs och/eller bok behöver ändras för bokningen så måste en ny bokning skapas (och den här bör först raderas)</div>";
 		$mode = "edit";
 		break;
 	case "bokningar-add":
-		$rubrik = "Gör en bokning";
 		$mode = "add";
 		break;
 	case "bokningar-save":
-		$rubrik = "Bokningen är sparad";
 		$mode = "save";
 		break;
 	case "bokningar-delete":
-		$rubrik = "Bokningen har raderats";
 		$mode = "delete";
 		break;
 	default:
-		$rubrik = "Information om bokning";
 		$mode = "view";
 }
-print "<p>$mode (should be 'view')</p>";
+//print "<p>page_bokningar - början: $mode</p>";
 
 $bokning = new Bokning();
-
 if(isset($_GET[CONFIG::PARAM_REF_ID])){
 	
 	if(isset($_GET[Config::PARAM_REF_TYP])){
@@ -51,13 +44,15 @@ if(isset($_GET[CONFIG::PARAM_REF_ID])){
 				$bokning->bokId = $_GET[CONFIG::PARAM_REF_ID];
 				break;
 			case "kurs":
-				$bokning->kursd = $_GET[CONFIG::PARAM_REF_ID];
+				$bokning->kursId = $_GET[CONFIG::PARAM_REF_ID];
 				break;
 		}
 
 		
 	} else {
-		$bokning->setFromId($_GET[CONFIG::PARAM_REF_ID]);
+		if(($mode != "add")&&($mode != "save")){
+			$bokning->setFromId($_GET[CONFIG::PARAM_REF_ID]);
+		}
 	}
 	
 }
@@ -76,22 +71,30 @@ if($mode == "delete"){
 
 if(($mode == "save")&&($_POST["select-bok"])){
 	
-	if($bokning->save()){
-		$saveSuccess = true;
-		$mode = "view"; // växlar läge till view för att se sparad data
-		$dbDebug = "<p class=\"varning\">result:[" . $result . "]</p>";
-		$dbDebug = $dbDebug . "<p class=\"varning\">bok: " . $_POST["select-bok"] . "</p>";
-		$dbDebug = $dbDebug . "<p class=\"varning\">bok: " . $_POST["select-kurs"] . "</p>";
-		$dbDebug = $dbDebug . "<p class=\"varning\">Databasinfo: " . mysql_info() . "</p>";
-		$dbDebug = $dbDebug . "<p class=\"varning\">Databasfel: " . mysql_error() . "</p>";
-		$dbDebug = $dbDebug . "<p class=\"varning\">SQL källa: " . $q . "</p>";
+	$bokning->setFromData($_POST["select-kurs"], $_POST["select-bok"], $_POST["select-larare"], $_POST["input-kommentar"]);
+
+	if(!Bokning::bokningExists($bokning->bokId, $bokning->kursId)){
+		// om bokningen - kombon kurs-bok -  inte finns tidigare
+		try {
+
+			$bokning->save();
+			$saveSuccess = true;
+			$mode = "view"; // växlar läge till view för att se sparad data
+			HTML_FACTORY::printInfoAlert("Genomfört", "Bokningen har sparats.");
+
+		} catch (Exception $e) {
+			$rubrik = "<span class=\"warning\">Bokningen misslyckades :(</span>";
+			$saveSuccess = false;
+			$mode = "add"; // växlar läge till add vid olycka
+			HTML_FACTORY::printErrorAlert("Bokningen misslyckades :´(", $e->getMessage());
+		}
 
 	} else {
-		$rubrik = "<span class=\"warning\">Bokningen misslyckades :(</span>";
-		$saveSuccess = false;
+		// tillåt inte bokningen om kombon kurs-bok redan finns
+		$b = new Bok();
+		$b->setFromId($bokning->bokId);
+		HTML_FACTORY::printWarningAlert("Bokningen genomfördes INTE:", "Boken '".$b->fullTitel."' är redan bokad till kursen ".$bokning->kursId);
 		$mode = "add"; // växlar läge till add vid olycka
-		$dbDebug = "<p class=\"varning\">Databasfel: " . mysql_error() . "</p>";
-		$dbDebug = $dbDebug . "<p class=\"varning\">SQL källa: " . $q . "</p>";
 	}
 }
 
@@ -110,43 +113,36 @@ if(isset($bokning->bokId)){
 	$bok = null;
 }
 
+if(isset($bokning->kursId)){
+	$kurs = new Kurs();
+	$kurs->setFromId($bokning->kursId);
+} else {
+	$kurs = null;
+}
+
 if($mode == "view"){
 
-	$bokUiHTML = HTML_FACTORY::getStaticTextFieldHTML("select-bok", "Bok", $bokning->id, $bok->getFullBokTitel() , "Vald bok för bokningen");
-	$kursUiHTML = HTML_FACTORY::getStaticTextFieldHTML("select-kurs", "Kurs", $bokning->kursId, $bokning->kursId , "Vald kurs för bokningen");
+	$bokUiHTML = HTML_FACTORY::getStaticTextFieldHTML("select-bok", "Bok", $bokning->bokId, $bok->getFullBokTitel() , "Vald bok för bokningen");
+	$kursUiHTML = HTML_FACTORY::getStaticTextFieldHTML("select-kurs", "Kurs", $bokning->kursId, $kurs->namn, "Vald kurs för bokningen");
 	
-	$intidUI = HTML_FACTORY::getStaticTextFieldHTML("select-in-tillfalle", "Återlämningstillfälle", $bokning->inTillfalle->desc, "", "Tillfälle då boken ska lämnas <strong>tillbaka</strong>");
-	$inlasarUI = HTML_FACTORY::getStaticTextFieldHTML("select-in-lasar", "Läsår - återlämning", $bokning["in_lasar_id"]);
+	$lararUI = HTML_FACTORY::getStaticTextFieldHTML("select-larare", "Bokningslärare", $bokning->bokare, "", "Läraren som <strong>gör bokning</strong>");
 	
-	$uttidUI = HTML_FACTORY::getStaticTextFieldHTML("select-ut-tillfalle", "Utlåningstillfälle", $bokning->utTillfalle->desc, "", "Tillfälle då boken ska lämnas <strong>ut</strong>");
-	$utlasarUI = HTML_FACTORY::getStaticTextFieldHTML("select-ut-lasar", "Läsår - utlåning", $bokning["ut_lasar_id"]);
-	$lararUI = HTML_FACTORY::getStaticTextFieldHTML("select-larare", "Bokningslärare", $bokning["larar_id"], "", "Läraren som <strong>gör bokning</strong>");
-	
-	$kommentarUI = HTML_FACTORY::getStaticTextFieldHTML("input-kommentar", "Kommentar", $bokning["kommentar"], "", "", "400");
+	$kommentarUI = HTML_FACTORY::getStaticTextFieldHTML("input-kommentar", "Kommentar", $bokning->kommentar, "", "", "400");
 } else {
 	//var_dump($bok);
-	if(isset($bok)){
-		$bokUiHTML = HTML_FACTORY::getStaticTextFieldHTML("select-bok", "Bok", $bok->id, $bok->fullTitel , "Vald bok för bokningen");
-	} else {
-		$bokUiHTML = HTML_FACTORY::getSelectBokHTML("Välj vilken bok som ska bokas till en kurs", $bokning->bokId);
-	}
-	if(!empty($bokning->kursId)){
-		$kursUiHTML = HTML_FACTORY::getStaticTextFieldHTML("select-kurs", "Kurs", $bokning->kursId, $bokning->kursId , "Vald kurs för bokningen");
-	} else {
-		$kursUiHTML = HTML_FACTORY::getSelectKursHTML("Välj vilken kurs boken ska bokas till", $bokning->kursId);
-	}
-	//if(!empty($bokning->inTid)){
-		//$intidUI = HTML_FACTORY::getSelectTillfalleHTML("Återlämningstillfälle", "Välj vid vilket tillfälle boken ska lämnas <strong>tillbaka</strong>", $bokning->inTillfalle->id, true);
+	//if(isset($bok)){
+		//$bokUiHTML = HTML_FACTORY::getStaticTextFieldHTML("select-bok", "Bok", $bok->id, $bok->fullTitel, "Vald bok för bokningen");
 	//} else {
-		//$intidUI = HTML_FACTORY::getSelectTillfalleHTML("Återlämningstillfälle", "Välj vid vilket tillfälle boken ska lämnas <strong>tillbaka</strong>");
+		$bokUiHTML = Bok::getSelectHTML("Välj vilken bok som ska bokas till en kurs", $bokning->bokId);
 	//}
-	//if(!empty($bokning->utTid)){
-		//$uttidUI = HTML_FACTORY::getSelectTillfalleHTML("Utlåningstillfälle", "VVälj vid vilket tillfälle boken ska lämnas <strong>ut</strong>", $bokning->utTillfalle->id, false);
+	//if(isset($kurs)){
+		//$kursUiHTML = HTML_FACTORY::getStaticTextFieldHTML("select-kurs", "Kurs", $kurs->id, $kurs->namn, "Vald kurs för bokningen");
 	//} else {
-		//$uttidUI = HTML_FACTORY::getSelectInUtTillfalleHTML("Utlåningstillfälle", "Välj vid vilket tillfälle boken ska lämnas <strong>ut</strong>");
+		$kursUiHTML = Kurs::getSelectHTML(NULL, "Välj vilken kurs boken ska bokas till", $bokning->kursId);
 	//}
-	//$lararUI = HTML_FACTORY::getSelectLarareHTML("Bokningslärare", "Läraren som <strong>gör bokning</strong> (du). Systemet känner redan till undervisningsläraren.", $bokning->bokare);
-	//$kommentarUI = HTML_FACTORY::getTextareaHTML("input-kommentar", "Kommentar", "Skriv en kommentar om du vill ge biblioteket någon extra-information om den här bokningen", $bokning->kommentar);
+
+	$lararUI = Larare::getSelectHTML("Läraren som <strong>gör bokning</strong> (du). Systemet känner redan till undervisningsläraren.", $bokning->bokare);
+	$kommentarUI = HTML_FACTORY::getTextareaHTML("input-kommentar", "Kommentar", "Skriv en kommentar om du vill ge biblioteket någon extra-information om den här bokningen", $bokning->kommentar, "100%");
 }
 //} // slut if DELETE
 ?>
@@ -166,7 +162,7 @@ if($mode == "view"){
 	}
 	
 	function sendDelete(){
-		window.location.href = "<?php print "?" . $CONFIG["primNavParam"] . "=bokningar&" . $CONFIG["secNavParam"] . "=delete&" . $CONFIG["refIdParam"] . "=" . $bokning["bok_id"]. "," . $bokning["kurs_id"]; ?>";	
+		window.location.href = "<?php print $bokning->urlDelete; ?>";	
 	}
 	
 	function submitForm(mode){
@@ -178,6 +174,28 @@ if($mode == "view"){
 	}
 </script>
 <?php } ?>
+
+<?php 
+// Sätter slutgiltiga UI-värden för mode här - den ursprungliga kan ha ändrats ovan
+switch($mode){
+	case "edit":
+		$rubrik = "Ändra bokningen";
+		$userNotice = "<div class=\"info-box\">Du kan <strong>inte</strong> ändra bok eller kurs i efterhand. Om kurs och/eller bok behöver ändras för bokningen så måste en ny bokning skapas (och den här bör först raderas)</div>";
+		break;
+	case "add":
+		$rubrik = "Gör en bokning";
+		break;
+	case "save":
+		$rubrik = "Bokningen är sparad";
+		break;
+	case "delete":
+		$rubrik = "Bokningen har raderats";
+		break;
+	default:
+		$rubrik = "Information om bokning";
+}
+//print "<p>page_bokningar - slutet: $mode</p>";
+?>
 <h1><?php print $rubrik ?></h1>
 
 <?php 
@@ -202,42 +220,38 @@ if($mode == "view"){
 ?>
 
 <div id="form-bokning-container" class="form-container">
-<?php $action = "?".$CONFIG["primNavParam"]."=bokningar&".$CONFIG["secNavParam"]."=save" ?>
-<form id="form-bokning" method="post" action="<?php print $action ?>">
+
+<form id="form-bokning" method="post" action="<?php print Bokning::getSaveUrl(); ?>">
 <input type="hidden" id="form-mode" name="form-mode" value="idle" />
 <?php print $bokUiHTML; ?>
 <?php print $kursUiHTML; ?><br />
-<?php print $uttidUI; ?>
-<?php print $utlasarUI; ?><br />
-<?php print $intidUI; ?>
-<?php print $inlasarUI; ?><br />
 <?php print $lararUI; ?><br />
 <?php print $kommentarUI; ?>
 
 <?php } // slut if DELETE 2 ?>
-<div class="submit-container">
+<div class="submit-container btn-group">
 <?php 
 	switch($mode){ 
 		case "add":
-			print HTML_FACTORY::getSubmitKnappHTML("Boka", "Skapa bokningen", "", "success", "bokningar-save");
-			//getSubmitKnappHTML($navValue, $label, $size = "", $flair = "success", $submitParam = "save", $title = "")
-			print HTML_FACTORY::getKnappHTML("bokningar", "Avbryt", "", "warning");
-			//getKnappHTML($navValue, $label, $size = "", $flair = "primary", $title = "")
+			print HTML_FACTORY::getSubmitKnappHTML("Boka", "", "success", "bokningar-save", "Skapa bokningen");
+			//getSubmitKnappHTML($label, $size = "", $flair = "success", $submitParam = "save", $title = "")
+			print HTML_FACTORY::getKnappHTML("?".Config::PARAM_NAV."=bokningar", "Avbryt", "", "warning", "Avbryt bokningen");
+
 			break;
 		case "edit":
-			print HTML_FACTORY::getSubmitKnappHTML("Boka", "Spara ändringen", "", "success", "save");
-			print HTML_FACTORY::getKnappHTML("bokningar", "Avbryt", "", "warning");
+			print HTML_FACTORY::getSubmitKnappHTML("Boka", "", "success", "bokningar-save", "Spara ändringen");
+			print HTML_FACTORY::getKnappHTML("?".Config::PARAM_NAV."=bokningar", "Avbryt", "", "warning", "Avbryt bokningen");
 			break;
 		case "delete":
 			if(isAdmin()){
 				//print getKnappHTML("bokningar&" . $CONFIG["secNavParam"] . "=delete&" . $CONFIG["refIdParam"] . "=" . $bokning["bok_id"]. "," . $bokning["kurs_id"], "Radera", "button-red", "Radera bokningen", "big");
-				print HTML_FACTORY::getSubmitKnappHTML("Radera", "Radera", "", "danger", "delete");
+				print HTML_FACTORY::getSubmitKnappHTML("Radera", "", "danger", "bokningar-delete", "Radera");
 				print HTML_FACTORY::getKnappHTML("bokningar", "Avbryt", "", "warning");
 			}
 			
 			
  	}
- 	print HTML_FACTORY::getKnappHTML("bokningar", "Tillbaka", "", "primary", "Tillbaka till alla bokningar"); 
+ 	print HTML_FACTORY::getKnappHTML("?".Config::PARAM_NAV."=bokningar", "Tillbaka", "", "primary", "Tillbaka till alla bokningar"); 
 ?>
 </div>
 </form>

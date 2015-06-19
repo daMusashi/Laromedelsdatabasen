@@ -21,7 +21,6 @@
 	HTML_FACTORY::printPanel("info", "Så här gör du", $infoContent);
 
 	
-
 	if(isset($_GET[Config::PARAM_ID])){
 		$activeTermin = new Termin();
 		$activeTermin->setFromId($_GET[Config::PARAM_ID]);
@@ -34,18 +33,20 @@
 		print HTML_FACTORY::getKnappHTML("bocker-add", "Lägg till en bok", "success", "Lägg till en ny bok");
 										
 	}
-	print "<div class=\"navbar-form navbar-right\">".Termin::getTerminSelectWidget("bocker", $activeTermin)."</div>";
-	print "<p class=\"navbar-text navbar-right\">Visar tillgänglighet för terminen</p>";
+	if(!Config::SIMPLE_MODE){
+		print "<div class=\"navbar-form navbar-right\">".Termin::getTerminSelectWidget("bocker", $activeTermin)."</div>";
+		print "<p class=\"navbar-text navbar-right\">Visar tillgänglighet för terminen</p>";
+	}
 	
 	print "</nav>";
 ?>
 
 <table class="table main<?php if(isLoggedin()){ print " table-hover";} ?> table-striped bocker"><thead>
 <tr>
-<th>&nbsp;</th>
-<th>&nbsp;</th>
+<th>&nbsp;</th> <!-- boka-knapp -->
+<th>&nbsp;</th> <!-- titel -->
 <!-- <th>Författare</th> -->
-<th></th>
+<th></th> <!-- tillgänglighet -->
 </tr></thead><tbody>
 
 <?php
@@ -56,30 +57,55 @@ $index=0;
 
 foreach($bocker as $bok){
 	
-	$antalObj = $bok->getAntalBokade($activeTermin->id);
-	
-	if($antalObj->bokbar){
-		$statusClass = "";
-		$buttonClass = "success";	
-	} else {
-		$statusClass = "unavaible";
-		$buttonClass = "danger";	
+	$statusClass = "";
+
+	if(!Config::SIMPLE_MODE){
+		$antalObj = $bok->getAntalBokade($activeTermin->id);
+		
+		if($antalObj->bokbar){
+			$statusClass = "";
+			$buttonClass = "success";
+			if($antalObj->bokbara <= Config::BOK_INSTOCK_WARNING){
+				$buttonClass = "warning";
+			}	
+		} else {
+			$statusClass = "unavaible";
+			$buttonClass = "danger";	
+		}
 	}
 	print "<tr class=\"$statusClass\">";
 	
 	print "<td>";
-	if($antalObj->bokbar && isLoggedin()){
-		print HTML_FACTORY::getBokaKnappHTML("sm", "bok", $bok->isbn, "Boka boken!");
-	} 	
+	if(Config::SIMPLE_MODE){
+		if(isLoggedin()){
+			print HTML_FACTORY::getBokaKnappHTML("sm", "bok", $bok->id, "Boka boken!");
+		}
+	} else {
+		if($antalObj->bokbar && isLoggedin()){
+			print HTML_FACTORY::getBokaKnappHTML("sm", "bok", $bok->id, "Boka boken!");
+		} 
+	}
 	print "</td>";
 	
-	print "<td>";
-		print $bok->getHtmlTdSnippet($index, $activeTermin->id, $antalObj, true);
+	print "<td class=\"major\">";
+		if(Config::SIMPLE_MODE){
+			print "".$bok->fullTitel."";
+		} else {
+			print HTML_FACTORY::getBokTdInfoSnippet($index, $bok, $antalObj);
+		}
 	print "</td>";
 
+	if(!Config::SIMPLE_MODE){
+		print "<td>";
+		if(isLoggedin()){
+			$bokningsLink = $bok->urlBoka;
+		} else {
+			$bokningsLink = "#";
+		}
+		print "<a href=\"".$bokningsLink."\" class=\"btn btn-$buttonClass btn-xs\">Tillgängliga ".$activeTermin->desc." <span class=\"badge\">$antalObj->bokbara</span></a> av ".$antalObj->antal;
+		print "</td>";
+	}
 
-	print "<td><button class=\"btn btn-$buttonClass btn-xs\" type=\"button\">Tillgängliga <span class=\"badge\">$antalObj->bokbara</span></button></td>";
-	
 	print "</tr>";
 
 	$index++;

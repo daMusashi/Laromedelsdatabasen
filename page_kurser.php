@@ -11,7 +11,7 @@
 </div>
 
 <div class="info-box">
-<p>Välj en kurs för att se detaljerad information om bokningningarna för den (kurser utan bokningar är inte valbara)</p>
+<!-- nothing to see here - yet -->
 </div>
 
 <?php
@@ -20,10 +20,16 @@ if(isset($_GET[Config::PARAM_ID])){
 	$activeLasar = new Lasar();
 	$activeLasar->setFromId($_GET[Config::PARAM_ID]);
 } else {
-	$activeLasar = Lasar::getCurrentLasar();
+	if(Config::SIMPLE_MODE){
+		$activeLasar = Lasar::getCurrentLasar(1);
+	} else {
+		$activeLasar = Lasar::getCurrentLasar();
+	}
 }
 
-print Lasar::getTabsHTML("kurser", $activeLasar->id, true);
+if(!Config::SIMPLE_MODE){
+	print Lasar::getTabsHTML("kurser", $activeLasar->id, true);
+}
 
 $Selectedkurser = Kurs::getAllForTermin($activeLasar->getFirstTerminId(), true);
 
@@ -34,7 +40,9 @@ $Selectedkurser = Kurs::getAllForTermin($activeLasar->getFirstTerminId(), true);
 <tr class="info">
 <th>&nbsp;</th>
 <th>Namn</th>
+<?php if(!Config::SIMPLE_MODE){ ?>
 <th>Antal <br />elever</th>
+<?php } ?>
 <th>Start</th>
 <th>Slut</th>
 <th>Lärare</th>
@@ -55,9 +63,11 @@ foreach($Selectedkurser as $kurs){
 	}
 	print "</td>";
 	
-	print "<td class=\"major\">" . $kurs->namn . "</td>";
+	print "<td class=\"major\">" . $kurs->id . "</td>";
 	
-	print "<td class=\"minor\">" .  Kurs::getAntalElever($kurs->id) . "</td>";
+	if(!Config::SIMPLE_MODE){
+		print "<td class=\"minor\">" .  Kurs::getAntalElever($kurs->id) . "</td>";
+	}
 
 	print "<td class=\"minor\">" .  $kurs->startTermin->desc. "</td>";
 	print "<td class=\"minor\">" .  $kurs->slutTermin->desc. "</td>";
@@ -75,16 +85,20 @@ foreach($Selectedkurser as $kurs){
 	print "<td class=\"minor\">$lararStr</td>";
 	
 	print "<td>";
-	$bokList = Kurs::getBocker($kurs->id);
-	if(count($bokList) > 0){
-		print "<div>";
-		foreach($bokList as $bok){
-			print $bok->getHtmlTdSnippet($bokIndex, $activeLasar->getFirstTerminId(), true, true, $kurs->id);
-			$bokIndex++;	
+	if(isLoggedIn()){
+		$bokList = Kurs::getBocker($kurs->id);
+		if(count($bokList) > 0){
+			print "<div>";
+			foreach($bokList as $bok){		
+				HTML_FACTORY::getBokTdInfoSnippet($bokIndex, $bok);
+				$bokIndex++;	
+			}
+			print "</div>";
+		} else {
+			print "<em>Inga bokningar än</em>";
 		}
-		print "</div>";
 	} else {
-		print "<em>Inga bokningar än</em>";
+		print "Logga in för info";
 	}
 	print "</td>";
 	

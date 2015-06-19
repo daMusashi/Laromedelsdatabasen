@@ -10,12 +10,13 @@ $IMPORT["Rapporter"]["Elever"]["FieldIndex"]["Larare"] = 4; // Lärare (Mentor)
 $IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["GruppID"] = 0; // ID (Grupper/kurser)
 $IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Larare"] = 1; // Undervisande lärare (kommaseparerade lärar-taggar)
 $IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Elever"] = 2; // Elever (kommaseparerade personnummer)
+$IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Period"] = 3; // Elever (kommaseparerade personnummer)
 $IMPORT["Rapporter"]["Grupper"]["AllowedPrefixes"] = array(
-"AG14", // språkval
-"14FM/AG/", // 14FM//Em etc ind val
-"14EM/AG/",
-"14FMHT/AG/",
-"14FMVT/AG/",
+"AG15", // språkval
+"15FM/AG/", // 14FM//Em etc ind val
+"15EM/AG/",
+"15FMHT/AG/",
+"15FMVT/AG/",
 "FNA",
 "IB",
 "NA",

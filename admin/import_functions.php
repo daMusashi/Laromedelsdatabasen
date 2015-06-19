@@ -1,7 +1,15 @@
 <?php
 
+require_once("class_html_factory.php");
+require_once("class_klass.php");
+require_once("class_elev.php");
+require_once("class_kurs.php");
+require_once("class_larare.php");
+
 // Kör Elever först - den skapar grunddata
 function parseElever($fileRowArray){
+	
+
 	global $IMPORT;
 	
 	debugLog("Import påbörjas...");
@@ -10,39 +18,25 @@ function parseElever($fileRowArray){
 		
 		// klass
 		$klassId = $rowFields[$IMPORT["Rapporter"]["Elever"]["FieldIndex"]["Klass"]];
-		if(!klassExists($klassId)){
-			if($response = addKlass($klassId)){
-				//importLog("Lade till klass: $response");		
-			} else {
-				debugLog("Fel vid lägga till klass: " . mysql_error(), "parseElever");
-			}
+		
+		try {
+			HTML_FACTORY::printInfoAlert("Klass-import", Klass::importSave($klassId));
+		} catch (Exception $e) {
+			HTML_FACTORY::printDangerAlert("Klass-import", $e->getMessage());
 		}
 		
-		// larare (mentorer)
-		// kolla så att lärare är angivna (gäller troligen indval med elever utanför äg)
-		if(count($rowFields) > $IMPORT["Rapporter"]["Elever"]["FieldIndex"]["Larare"]){ // kollar så att lärare är angivna i datan
-			$lararArr = getValuesArray($rowFields[$IMPORT["Rapporter"]["Elever"]["FieldIndex"]["Larare"]]);
-			foreach($lararArr as $larareId){
-				if(!larareExists($larareId)){
-					if($response = addLarare($larareId, $klassId)){
-						//importLog("Lade till lärare: $response");
-					} else {
-						debugLog("Fel vid lägga till lärare: " . mysql_error(), "parseElever");
-					}
-				}
-			}
-		}
+		// TOG BORT FÖR EN LÄRAR-IMPORT HÄR, som verkar förekomma i specialla fall
+		// Kolla äldre versioner om behövs lägga tillbaka
 		
 		// elever
 		$elevId = $rowFields[$IMPORT["Rapporter"]["Elever"]["FieldIndex"]["ElevID"]];
 		$elevEfternamn = $rowFields[$IMPORT["Rapporter"]["Elever"]["FieldIndex"]["Efternamn"]];
 		$elevFornamn = $rowFields[$IMPORT["Rapporter"]["Elever"]["FieldIndex"]["Fornamn"]];
-		if(!elevExists($elevId)){
-			if($response = addElev($elevId, $elevFornamn, $elevEfternamn, $klassId)){
-				//importLog("Lade till elev: $response");		
-			} else {
-				debugLog("Fel vid lägga till elevvv: " . mysql_error(), "parseElever");
-			}
+		
+		try {
+			HTML_FACTORY::printInfoAlert("Elev-import", Elev::importSave($elevId, $elevFornamn , $elevEfternamn, $klassId));
+		} catch (Exception $e) {
+			HTML_FACTORY::printDangerAlert("Elev-import", $e->getMessage());
 		}
 	}
 	
@@ -50,7 +44,9 @@ function parseElever($fileRowArray){
 
 
 // KÖr den här efter Elever - Grupprapporten
-function parseKurser($fileRowArray){
+function parseKurser($fileRowArray, $lasarObj){
+	
+
 	global $IMPORT;
 	
 	foreach($fileRowArray as $rowString){
@@ -59,53 +55,53 @@ function parseKurser($fileRowArray){
 		// Kurser/grupper
 		$kursId = $rowFields[$IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["GruppID"]];
 		
-		if(validateKursId($kursId)&&!kursExists($kursId)){
-			if($response = addKurs($kursId)){
-				//importLog("Lade till kurs: $response");		
-			
+		if(validateKursId($kursId)){
+			$period = $rowFields[$IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Period"]];
 		
-				// Koppla elever till kurser (eleverna ska/bör redan finns lagrade från import av lelev-rapport)
-				// DBEUG NEDAN VIKTIG OM ELEVER INTE KNYTS TILL KURSER, DÅ FÄLTINDEX FEL
-				//importLog("<strong>Kurs-elev</strong>: fält i datan [" .count($rowFields). "], plats för elever[" . $IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Elever"] . "]");
+		
+			try {
+				HTML_FACTORY::printInfoAlert("Kurs-import", Kurs::importSave($kursId, $period, $lasarObj));
+				
 				if(count($rowFields) > $IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Elever"]){ // kollar så att elever är angivna i datan
 					$elevArr = getValuesArray($rowFields[$IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Elever"]]);
-					foreach($elevArr as $elevId){
-						// ska inte behöva kolla om relation existerar då datan kommer från annan db där dubletter av detta slag inte ska kunna finnas
-						if($elevId != "" && $elevId != " "){
-							if($response = addRelationElevKurs($elevId, $kursId)){
-								importLog("Lade till kurs-elev-relation: $response");		
-							} else {
-								debugLog("Fel vid lägga till kurs-elev-relation: " . mysql_error(), "parseGrupper");
-							}
+					
+					//var_dump($elevArr);
+
+					if(!empty($elevArr)){
+						try {
+							HTML_FACTORY::printInfoAlert("Elever-i-Kurs-import", Kurs::importSaveAddElever($kursId, $elevArr));
+						} catch (Exception $e) {
+							HTML_FACTORY::printDangerAlert("Elever-i-Kurs-import", $e->getMessage());
 						}
+					}
 				}
+
+			} catch (Exception $e) {
+				HTML_FACTORY::printDangerAlert("Kurs-import", $e->getMessage());
 			}
 		
 		
-		} else {
-				debugLog("Fel vid lägga till kurs: " . mysql_error(), "parseGrupper");
-			}
-		}
-		
-		// lärare (undervisande) lägger till saknade (ej mentorer) och kopplar till kurs
-		$lararArr = getValuesArray($rowFields[$IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Larare"]]);
-		foreach($lararArr as $lararId){
-			if(!larareExists($lararId)){
-				if($response = addLarare($lararId)){
-					//importLog("Lade till lärare: $response");
-				} else {
-					debugLog("Fel vid lägga till lärare: " . mysql_error(), "parseGrupper");
+			// lärare (undervisande) lägger till saknade (ej mentorer) och kopplar till kurs
+			$lararArr = getValuesArray($rowFields[$IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Larare"]]);
+			foreach($lararArr as $lararId){
+				try {
+					HTML_FACTORY::printInfoAlert("Lärar-import", Larare::importSave($lararId, "", ""));
+				} catch (Exception $e) {
+					HTML_FACTORY::printDangerAlert("Lärar-import", $e->getMessage());
+				}
+
+				// ska inte behöva kolla om relation existerar då datan kommer från annan db där dubletter av detta slag inte ska kunna finnas
+				try {
+					HTML_FACTORY::printInfoAlert("Lärare-i-kurs-import", Kurs::importSaveAddlarare($kursId, $lararId));
+				} catch (Exception $e) {
+					HTML_FACTORY::printDangerAlert("Lärare-i-kurs-import", $e->getMessage());
 				}
 			}
 
-			// ska inte behöva kolla om relation existerar då datan kommer från annan db där dubletter av detta slag inte ska kunna finnas
-			if($response = addRelationLarareKurs($lararId, $kursId)){
-				//importLog("Lade till kurs-lärare-relation: $response");		
-			} else {
-				debugLog("Fel vid lägga till kurs-lärare-relation: " . mysql_error(), "parseGrupper");
-			}
-		}
-	}
+		} else {
+			HTML_FACTORY::printWarningAlert("Kurs-import", "Kurs med id $kursId finns INTE på WHITELIST. INTE importerad.");
+		}// slut om validerat namn
+	} // slut for each kurs
 }
 
 // Importera elever från andra skolor - Inviduella elever-rapporten
@@ -160,6 +156,37 @@ function parseIndKurser($fileRowArray){
 
 	}
 }
+
+function validateKursId($kursID){
+
+	global $IMPORT;
+	$valid = true;
+	
+	$prefixFound = false;
+	foreach($IMPORT["Rapporter"]["Grupper"]["AllowedPrefixes"] as $prefix){
+		$kursPrefix = substr($kursID, 0, strlen($prefix));
+		if($kursPrefix == $prefix){
+			$prefixFound = true;
+			break;
+		}
+	}
+	
+	$postfixFound = false;
+	foreach($IMPORT["Rapporter"]["Grupper"]["DisallowedPostfixes"] as $postfix){
+		$kursPostfix = substr($kursID, -strlen($postfix));
+		if($kursPostfix == $postfix){
+			$postfixFound = true;
+			break;
+		}
+	}
+	
+	if($prefixFound&&!$postfixFound){
+		return true;
+	} else {
+		return false;
+	}
+}
+
 
 // Import bokfil
 function parseBocker($fileRowArray){
@@ -307,36 +334,7 @@ function getAndValidateFile($file_key){
 	}
 }
 
-function validateKursId($kursID){
-	global $IMPORT;
-	$valid = true;
-	
-	$prefixFound = false;
-	foreach($IMPORT["Rapporter"]["Grupper"]["AllowedPrefixes"] as $prefix){
-		$kursPrefix = substr($kursID, 0, strlen($prefix));
-		if($kursPrefix == $prefix){
-			$prefixFound = true;
-			break;
-		}
-	}
-	
-	$postfixFound = false;
-	foreach($IMPORT["Rapporter"]["Grupper"]["DisallowedPostfixes"] as $postfix){
-		$kursPostfix = substr($kursID, -strlen($postfix));
-		if($kursPostfix == $postfix){
-			$postfixFound = true;
-			break;
-		}
-	}
-	
-	if($prefixFound&&!$postfixFound){
-		return true;
-	} else {
-		return false;
-	}
-	
-	
-}
+
 
 function printFileInfo($file_key, $filRowArray){
 	global $IMPORT;
