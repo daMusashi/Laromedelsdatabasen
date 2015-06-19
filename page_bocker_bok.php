@@ -1,7 +1,4 @@
 <?php
-global $CONFIG;
-
-require_once("config.php");
 require_once("class_bok.php");
 
 $selectedBokId = "";
@@ -48,9 +45,9 @@ if($mode == "delete"){
 } else {
 
 	if(($mode == "save")&&($_POST["isbn"])){
-		var_dump($_POST);
+		//var_dump($_POST);
 		$newBok = new Bok($_POST);
-		print $newBok->toString();
+		//print $newBok->toString();
 
 
 		if($newBok->save()){
@@ -102,39 +99,7 @@ if($mode == "delete"){
 	$arkiveradUI = HTML_FACTORY::getHiddenFieldHTML(Bok::FN_ARKIVERAD, $bok->arkiverad);
 
 } // slut if DELETE
-?>
 
-<?php if(isAdmin()) { ?>
-<script type="text/javascript">
-	function checkForm(mode){
-		mnnDebug("bocker-checkForm", "Kontrollera form");
-		
-		if(mode == "delete"){
-			mnnDebug("bocker-checkForm", "Delete-läge: skapar bekräftelse");
-			dialogConfirmation("Bekräfta", "Vill du verkligen <strong>RADERA</strong> boken?", "sendDelete();")
-		} else {
-			mnnDebug("bocker-checkForm", "Startar submit");
-			submitForm(mode);
-		}
-	}
-	
-	function sendDelete(){
-		<?php $send = "?" . Config::PARAM_PRIM_NAV . "=bocker&" . Config::PARAM_SEC_NAV . "=delete&" . Config::PARAM_REF_ID . "=" . $bok->isbn; ?>	
-		window.location.href = '<?php print $send; ?>';	
-	}
-	
-	function submitForm(mode){
-		mnnDebug("bocker-submitForm", "Skickar form");
-		var theForm = document.getElementById("form-bocker");
-		$("#form-mode").val(mode);
-		theForm.submit();
-	}
-</script>
-<?php } ?>
-<h1><?php print $rubrik ?></h1>
-<p>DEBUG-> mode:<?php print $mode ?></p>
-
-<?php 
 	if($mode == "delete"){ 
 		if($deleteSuccess){
 			print "<h2>Boken har raderats</h2>";
@@ -144,9 +109,7 @@ if($mode == "delete"){
 			print "<p>Boken har INTE raderats. Kontakta utvecklare (Martin)</p>";
 		}
 	} else {
-?>
 
-		<?php 
 			if($dbDebug != ""){ 
 				//print $dbDebug; 
 			} 
@@ -184,7 +147,7 @@ if($mode == "delete"){
 
 <?php } // slut if DELETE 2 ?>
 
-<div class="submit-container">
+<div class="btn-group btn-group-lg" role="group">
 <?php 
 	switch($mode){ 
 		case "add":
@@ -215,8 +178,10 @@ if($mode == "delete"){
 <?php 
 	if($mode != "add" && $mode != "delete"){
 		if(0 < $antal->bokade){
-			print "<h2>Bokningar för boken</h2>";
-			print getBokningarForBockerHTML($bok->isbn); 
+			$bokningsHTML = HTML_FACTORY::getBokningarHTML(Bok::FK_ID . " = '" . $bok->isbn . "'");
+			HTML_FACTORY::printPanel("default", "Bokingar för boken", $infoContent);
+		} else {
+			HTML_FACTORY::printPanel("default", "Bokingar för boken", "<em>Boken har inga bokningar</em>");
 		}
 	}
 
@@ -226,5 +191,9 @@ function displayValue($value){
 	} else {
 		return $value;
 	}
+}
+
+function submitForm(){
+
 }
 ?>

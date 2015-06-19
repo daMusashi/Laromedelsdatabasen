@@ -14,7 +14,7 @@
 			$compiledOrderBy = self::getCompiledOrderBy($orderByField);
 						
 			$q = "SELECT * FROM ".$table." ".$compiledWhere.$compiledOrderBy;
-			print "<p>$q</p>";
+			//print "<p>$q</p>";
 		
 			$result = mysqli_query(CONFIG::$DB_LINK, $q);
 			if(!$result){
@@ -36,8 +36,8 @@
 			}
 		}
 		
-		public static function _countRows($table, $where = NULL, $isArkivbar = false){
-			$compiledWhere = getCompiledWhere($where, $isArkivbar, $inkluderaArkiverade);
+		public static function _countRows($table, $where = NULL, $isArkivbar = false, $inkluderaArkiverade = false){
+			$compiledWhere = Self::getCompiledWhere($where, $isArkivbar, $inkluderaArkiverade);
 			
 			$q = "SELECT * FROM ".$table.$compiledWhere;
 			return mysqli_num_rows(mysqli_query(CONFIG::$DB_LINK, $q));

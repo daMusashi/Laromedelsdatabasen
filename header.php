@@ -4,9 +4,12 @@
 		<h1>Läromedelsbokning (beta)</h1>
     </div>
 	
-		<?php include("navigering.php"); ?>
+		<?php 
+			if(CONFIG::$DB_SUCCESS){ 
+				include("navigering.php");
+			}
+		?>
      <!-- SLUT Navigering --> 
-     <div id="messages"><?php require_once("connect.php"); ?></div>
      </section>
 </header>
 

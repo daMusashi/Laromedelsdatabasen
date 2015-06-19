@@ -4,6 +4,7 @@ $(document).ready(function()
     } 
 );
 
+
 $( document ).ajaxError(function() {
   mnnDebug("Document: Global felhanterare Ajax", "Ett Ajax-anrop failade :(");
 });

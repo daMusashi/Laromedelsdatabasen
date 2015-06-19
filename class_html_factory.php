@@ -10,6 +10,18 @@ class HTML_FACTORY {
 	}
 
 
+	public static function printPanel($flair, $heading, $content){
+		$html = "<div class=\"panel panel-$flair\">
+					<div class=\"panel-heading\">$heading</div>
+					<div class=\"panel-body\">
+						$content
+					</div>
+				</div>
+		";
+		print $html;
+	}
+
+
 	private static function getKnappHTML_base($navValue, $label, $size = "", $flair="primary", $title = "", $submit = false, $submitParam = "save"){
 
 		if($submit){
@@ -41,12 +53,6 @@ class HTML_FACTORY {
 		return Self::getKnappHTML("bokningar-add&".$ref, "Boka", $size, "success", $title);
 	}
 
-	public static function getBokKnappHTML($action, $label, $referensID = "", $title = "", $classes){
-
-		$ref="&".CONFIG::PARAM_REF_ID."=".$referensID;	
-		
-		return Self::getKnappHTML("bocker-$action".$ref, $label, $classes, $title);
-	}
 
 	public static function getBokningarHTML($where = "", $orderOn = ""){
 
@@ -58,7 +64,11 @@ class HTML_FACTORY {
 				<p>KOntakt biblioteket om du vill ha något ändrat</p></div>";
 		}
 		
-		$html = "<table class=\"table main table-hover bockningar\">
+		$hover = "";
+		if(isLoggedin()){ 
+			$hover = " table-hover";
+		}
+		$html = "<table class=\"table main$hover table-striped bockningar\">
 					<thead><tr>
 						<th>Bok</th>
 						<th>Antal</th>
@@ -108,13 +118,6 @@ class HTML_FACTORY {
 		return $html;
 	}
 
-	function ______getBokningarForBockerHTML($isbn){
-		return getBokningarHTML("kurser_bocker.bok_id = '$isbn'");
-	}
-
-	function ______getBokningarForKurserHTML($kursid){
-		return getBokningarHTML("kurser_bocker.kurs_id = '$kursid'");
-	}
 
 	/********************************
 	/*  FORMS

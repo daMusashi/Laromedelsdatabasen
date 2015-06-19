@@ -2,80 +2,74 @@
 	require_once("class_abstract_dataobject.php");
 	require_once("class_bok.php");
 	require_once("class_larare.php");
-	require_once("class_tillfalle.php");
+	require_once("class_termin.php");
+	//require_once("class_tillfalle.php");
 	
 	class Kurs extends Dataobject
 	{
     	const TABLE = "kurser"; // tabellnamn
-		const TABLE_KURS_ELEVER = "kurser_elever"; // tabellnamn
+		const TABLE_BOKNINGAR = "bokningar"; // tabellnamn
 		const TABLE_KURS_BOCKER = "kurser_bocker"; // tabellnamn
 		const TABLE_KURS_LARARE = "kurser_larare";
 		
 		const FN_ID = "id"; // field name
+		const FN_NAMN = "namn"; // field name
 		const FN_ARKIVERAD = "arkiverad"; // field name
-		const FN_STARTTID = "starttid"; // field name
-		const FN_SLUTTID = "sluttid"; // field name
+		const FN_STARTTERMIN = "starttermin"; // field name
+		const FN_SLUTTERMIN = "sluttermin"; // field name
 
 		const PK_ID = self::FN_ID; // fieldname PRIMARY key 
 		const FK_ID = "kurs_id"; // fieldname FORIEGN key 
 
-		const DEFAULT_SORT_BY = self::FN_ID;
+		const DEFAULT_SORT_BY = self::FN_NAMN;
 
-		const OSPEC_ID = "-ospec-"; // kursId för ospecifierad kurs
-		const OSPEC_DESC = "(Ospecifierad kurs)"; // beskeivning för ospecifierad kurs
-		
 		public $id = NULL;
-		public $isOspec = false; // om en ospecifierad kurs
+		public $namn = "<ej namngiven>";
+		public $startTermin_id = ""; 
+		public $slutTermin_id = ""; 
 		public $arkiverad = false;
-		public $startTid_id = ""; // tillfalle-id för starttid
-		public $slutTid_id = ""; // tillfalle-id för sluttid
 
-		public $startTid = null; // genereras - Tillfalle-objekt av $startTid_id
-		public $slutTid = null; // genereras - Tillfalle-objekt av $slutTid_id
+		public $startTermin = null; // genereras - Tillfalle-objekt av ett $startTermin_id (oftast från läst från DB, lagrat i FN_STARTTERMIN)
+		public $slutTermin = null; // genereras - Tillfalle-objekt av ett $slutTermin_id (oftast från läst från DB, lagrat i FN_SLUTTERMIN)
 				
 		public $isEmpty = true;
 		
 		// genererade props
-		public $antalElever = 0;
+		//public $antalElever = 0;  !! kör on demand istället!
 		public $urlView = "";
-		public $larare = [];
-		public $bocker = [];
+		//public $larare = []; !! kör on demand istället!
+		//public $bocker = []; !! kör on demand istället!
 
    	/*
 		Statics
 	*/
 	
-	public static function getAll($where = NULL, $inkluderaArkiverade = false){
+	public static function getAll($where = NULL, $idsOnly = false, $inkluderaArkiverade = false){
 		
-		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_STARTTID.",".self::FN_ID, $inkluderaArkiverade);
+		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_STARTTERMIN.",".self::FN_ID, $inkluderaArkiverade);
 		//$list = array(new Kurs(Self::OSPEC_ID));
 		$list = [];
-		$index = 0;
+
 		while($fieldArray = mysqli_fetch_assoc($result)){
 
-			// fix för kurser utan värde i arkiverad
-			if(!is_array($fieldArray)){
-				// $fieldArray innehåller du bara id utan array (om inte schemat förändrats)
-				//$fieldArray["id"] = $fieldArray;
-				//$fieldArray["arkiverad"] = 0;
-
+	
+			if($idsOnly){
+				$kurs = $fieldArray[Self::FN_ID];
+			} else {
+				$kurs = new Kurs();
+				$kurs->setFromAssoc($fieldArray);
 			}
-			
-			$kurs = new Kurs();
-			
-			$kurs->setFromAssoc($fieldArray);
 
 			array_push($list, $kurs);
 
-			$index++;
 		}
 		
 		return $list;
 	}
 
-	public static function getAllForLasar($yearId){
-		$year = new Tillfalle_year();
-		$year->setFromId($yearId);
+	public static function _obselute_getAllForLasar($terminId){
+		$termin = new Termin();
+		$termin->setFromId($terminId);
 
 		$all = Self::getAll();
 
@@ -84,7 +78,7 @@
 		foreach($all as $kurs){
 			//print "<p>";
 			//print "start:". $kurs->startTid->year->value . ", year:". $year->value. ", slut:" .$kurs->slutTid->year->value;
-			if(($kurs->startTid->year->value <= $year->value)&&($kurs->slutTid->year->value >= $year->value)){
+			if(($kurs->startTermin->lasar->value <= $termin->lasar->value)&&($kurs->slutTermin->lasar->value >= $termin->lasar->value)){
 				array_push($list, $kurs);
 				//print " MATCH!!!";
 			}
@@ -94,10 +88,53 @@
 		return $list;
 	}
 
+	public static function _getAllForTermin($terminId, $forLasar = false, $onlyIds = true){
+		$termin = new Termin();
+		$termin->setFromId($terminId);
+
+		$all = Self::getAll();
+
+		$list = [];
+
+		foreach($all as $kurs){
+			if($forLasar){
+				$start = $kurs->startTermin->lasar->value;
+				$slut = $kurs->slutTermin->lasar->value;
+				$wanted = $termin->lasar->value;
+			} else {
+				$start = $kurs->startTermin->value;
+				$slut = $kurs->slutTermin->value;
+				$wanted = $termin->value;
+			}
+			//print "<p>";
+			//print "start:". $kurs->startTid->year->value . ", year:". $year->value. ", slut:" .$kurs->slutTid->year->value;
+			if(($start <= $wanted)&&($slut >= $wanted)){
+				if($onlyIds){
+					array_push($list, $kurs->id);
+					//print " MATCH!!!";
+				} else {
+					
+					array_push($list, $kurs);
+				}
+			}
+			//print "</p>";
+		}
+
+		return $list;
+	}
+
+	public static function getAllForTermin($terminId, $forLasar = false){
+		return Self::_getAllForTermin($terminId, $forLasar, false);
+	}
+
+	public static function getAllIdsForTermin($terminId, $forLasar = false){
+		return Self::_getAllForTermin($terminId, $forLasar, true);
+	}
+
 	public static function getAllAsSelectAssoc($where = NULL, $inkluderaArkiverade = false){
 		
 		$list = [];
-		$list[Self::OSPEC_ID] = Self::OSPEC_DESC;
+		//$list[Self::OSPEC_ID] = Self::OSPEC_DESC;
 		foreach(Self::getAll($where) as $kurs){
 			$list[$kurs->id] = $kurs->id;
 		}
@@ -137,20 +174,21 @@
 	}
 
 	public static function getBocker($kursId){
-		$q = "SELECT * FROM " . self::TABLE_KURS_BOCKER . 
+		$q = "SELECT * FROM " . self::TABLE_BOKNINGAR . 
 			" JOIN " . Bok::TABLE . 
-			" ON " . self::TABLE_KURS_BOCKER.".".Bok::FK_ID . " = " . Bok::PK_ID . 
-			" WHERE " . self::TABLE_KURS_BOCKER . "." . self::FK_ID . " =  '" . $kursId . "'" .
+			" ON " . self::TABLE_BOKNINGAR.".".Bok::FK_ID . " = " . Bok::TABLE . "." . Bok::PK_ID . 
+			" WHERE " . self::TABLE_BOKNINGAR . "." . self::FK_ID . " =  '" . $kursId . "'" .
 			" ORDER BY " . Bok::TABLE . "." . Bok::DEFAULT_ORDER_BY ;
 		//print "<p>$q</p>";
 		$result = mysqli_query(Config::$DB_LINK, $q);
-		if(!$result){
+		if($result === false){
 			debugLog("<strong>MYSL_QUERY-FEL!!</strong>, q:$q, fel: " . mysqli_error(Config::$DB_LINK) , "Kurs->getBocker()");
 		}
-		
+		//print "<p>$q</p>";
 		$bocker = array();
 		while($bokAssoc = mysqli_fetch_assoc($result)){
 			$bok = new Bok($bokAssoc);
+
 			array_push($bocker, $bok);
 		}
 		
@@ -184,7 +222,7 @@
 
 
 	public static function getAntalElever($kursId){
-		$q = "SELECT * FROM " . self::TABLE_KURS_ELEVER . " WHERE " . self::FK_ID . " = '" . $kursId . "'"; 
+		$q = "SELECT * FROM " . self::TABLE_BOKNINGAR . " WHERE " . self::FK_ID . " = '" . $kursId . "'"; 
 		//debugLog(" q:$q" , "db_functions|antalEleverIKurs");
 		$result = mysqli_query(Config::$DB_LINK, $q);
 		//debugLog(" num_rows:" . mysql_num_rows($result) , "db_functions|antalEleverIKurs");
@@ -201,8 +239,21 @@
 	Public
 	 */
 	
-	public function setFromId($kursID = NULL){
+	public function setFromId($kursID){
 		$q = "SELECT * FROM " . self::TABLE . " WHERE " . self::PK_ID . " = '" . $kursID . "'";
+		
+		$result = mysqli_query(Config::$DB_LINK, $q);
+	
+		if(mysqli_num_rows($result) == 1){
+			$this->setFromAssoc(mysqli_fetch_assoc($result));
+			$this->isEmpty = false;
+		} else {
+			$this->isEmpty = true;
+		}
+	}
+
+	public function setFromName($kursName){
+		$q = "SELECT * FROM " . self::TABLE . " WHERE " . self::FN_NAMN . " = '" . $kursName . "'";
 		
 		$result = mysqli_query(Config::$DB_LINK, $q);
 	
@@ -223,14 +274,103 @@
 		if(isset($kursAccFieldArray)){
 			//$this->id = $kursAccFieldArray[self::PK_ID];
 			$this->id = $kursAccFieldArray[self::FN_ID];
+			$this->namn = $kursAccFieldArray[self::FN_NAMN];
 			$this->arkiverad = $kursAccFieldArray[self::FN_ARKIVERAD];
-			$this->startTid_id = $kursAccFieldArray[self::FN_STARTTID];
-			$this->slutTid_id = $kursAccFieldArray[self::FN_SLUTTID];
+			$this->startTermin_id = $kursAccFieldArray[self::FN_STARTTERMIN];
+			$this->slutTermin_id = $kursAccFieldArray[self::FN_SLUTTERMIN];
 			$this->generateProps();
 			
 			$this->isEmpty = false;
 		} else {
 			$this->isEmpty = true;
+		}
+	}
+
+	public function setFromDataToSave($kursName, $startTerminId, $slutTerminId){
+		$this->id = -1;
+		$this->namn = $kursName;
+		$this->arkiverad = false;
+		$this->startTermin_id = $startTerminId;
+		$this->slutTermin_id = $slutTerminId;
+		
+		$this->generateProps();
+		
+		$this->isEmpty = false;
+
+	}
+
+	public function save(){
+
+		if($this->isValid()){
+			if($this->arkiverad){
+				$arkiverad = 1;
+			} else {
+				$arkiverad = 0;
+			}
+			if($this->meExtists()){
+				// update
+				$q = "UPDATE " . self::TABLE . 
+				" SET " . 
+				self::FN_NAMN. "='" . $this->namn . "', " .
+				self::FN_STARTTERMIN . "='" . $this->startTermin_id . "', " .
+				self::FN_SLUTTERMIN . "='" . $this->slutTermin_id . "', " .
+				self::FN_ARKIVERAD . "= " . $arkiverad . 
+				"WHERE " . self::FN_ID . "=" . $this->id;
+
+				$ret = mysqli_query(Config::$DB_LINK, $q);
+				if ($ret === false){
+					throw new Exception("Något gick vid fel vid <strong>uppdatering</strong>.
+						<br>Query: $q
+						<br>DB Error: ".mysqli_connect_error(Config::$DB_LINK));
+				}
+			} else {
+				// add
+				$q = "INSERT INTO " . self::TABLE . 
+				" (" . 
+				self::FN_NAMN . ", " .
+				self::FN_STARTTERMIN . ", " .
+				self::FN_SLUTTERMIN . ", " .
+				self::FN_ARKIVERAD .
+				")" .
+				" VALUES (" . 
+				"'" . $this->namn . "', " .
+				"'" . $this->startTermin_id . "', " .
+				"'" . $this->slutTermin_id . "', " .
+				$arkiverad . 
+				")";
+
+				$ret = mysqli_query(Config::$DB_LINK, $q);
+				if ($ret === false){
+					throw new Exception("Något gick vid fel vid <strong>skapande av post</strong>.
+						<br>Query: $q
+						<br>DB Error: ".mysqli_connect_error(Config::$DB_LINK));
+				}
+			}
+		} else {
+			throw new Exception("Informationsobjektet är inte komplett för sparande");
+		}
+
+	}
+
+	public function isValid(){
+		$valid = true;
+
+		if(empty($this->namn)){$valid = false;}
+		if(empty($this->startTermin_id)){$valid = false;}
+		if(empty($this->slutTermin_id)){$valid = false;}
+
+		return $valid;
+	}
+
+	private function meExtists(){
+		return Self::exists($this->id);
+	}
+
+	public static function exists($kursId){
+		if(self::_countRows(self::TABLE, Self::FN_ID . "=".$kursId) > 0){
+			return true;
+		} else {
+			return false;
 		}
 	}
    
@@ -247,17 +387,18 @@
     }
 	
 	private function generateProps(){
-		if($this->id == Self::OSPEC_ID){
-			$this->antalElever = 0;
-			$this->bocker = $this::getBocker($this->id);
-			$this->larare = [];
-		} else {
-			$this->antalElever = $this->getAntalElever($this->id);
-			$this->bocker = $this::getBocker($this->id);
-			$this->larare = $this->getLarare($this->id);
-		}
-		$this->startTid = new Tillfalle($this->startTid_id);
-		$this->slutTid = new Tillfalle($this->slutTid_id);
+		// Gör on-demand $this->antalElever = $this->getAntalElever($this->id);
+		// Gör on-demand $this->bocker = $this::getBocker($this->id);
+		// gör on-demand $this->larare = $this->getLarare($this->id);
+
+		$startTerm = new Termin();
+		$startTerm->setFromId($this->startTermin_id);
+
+		$slutTerm = new Termin();
+		$slutTerm->setFromId($this->slutTermin_id);
+
+		$this->startTermin = $startTerm;
+		$this->slutTermin = $slutTerm ;
 
 		$this->urlView = "?".CONFIG::PARAM_PRIM_NAV."=bokningar&".CONFIG::PARAM_SEC_NAV."=kurs&".CONFIG::PARAM_REF_ID."=".$this->id;
 	}

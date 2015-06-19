@@ -12,11 +12,11 @@ if(isset($_GET[CONFIG::PARAM_NAV])){
 	}
 	// Om felaktig GET-nav
 	if(!$_SESSION["currentNavKey"]){
-		$_SESSION["currentNavKey"] = $CONFIG["defaultPrimNav"];
+		$_SESSION["currentNavKey"] = CONFIG::PARAM_DEFAULT_NAV;
 	}
 } else {
 	// Om ingen GET-nav
-	$_SESSION["currentNavKey"] = $CONFIG["defaultPrimNav"];
+	$_SESSION["currentNavKey"] = CONFIG::PARAM_DEFAULT_NAV;
 }
 
 
@@ -57,37 +57,42 @@ foreach ($NAV as $key => $item) {
 	}
 
 }
-//print_r($menu);
+//var_dump($menu);
 // skriver ut navbar
-print "<nav  class=\"navbar navbar-default\" id=\"nav-main\" role=\"navigation\">";
+print "<nav  class=\"navbar navbar-default navbar-fixed-top\" id=\"nav-main\" role=\"navigation\">";
+print "<div  class=\"container\">";
 
-print "<ul class=\"nav navbar-nav\" role=\"menu\">";
+print "<ul class=\"nav navbar-nav navbar-left\" role=\"menu\">";
 //var_dump($menu);
 printMenu($menu["main"]);
+print "</ul>";
 
 if(count($menu["admin"]) > 0){
-	// skriver ut admin som dropdown
-	print "<li>";
-	print "<a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" role=\"button\" aria-expanded=\"false\">Admin <span class=\"caret\"></span></a>";
-	print "<ul class=\"dropdown-menu navbar-right\" role=\"menu\">";
-	printMenu($menu["admin"]);
-	print "</ul>";
-	print "</li>";
+	print "<div class=\"nav navbar-nav navbar-right\">";
+		print "<div class=\"dropdown\">";
+			print "<a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" role=\"button\" aria-expanded=\"false\">Administratör <span class=\"caret\"></span></a>";
+			print "<ul class=\"dropdown-menu\" role=\"menu\">";
+				printMenu($menu["admin"]);
+			print "</ul>";
+		print "</div>";
+	print "</div>";
 }
-print "<li id=\"nav-login\">".navLoginHTML()."</li>";
-print "</ul>";
-print "</nav>";
+print getNavLoginHTML();
+print "</div></nav>";
 
-
-
-
-function navLoginHTML(){
-	include("admin/login_functions.php");
-	if($_SESSION["isLoggedin"] == true){
-		getLogoutHTML();
+function getNavLoginHTML(){
+	if(isLoggedin()){
+		return _getNavlogoutHTML();
 	} else {
-		getLoginHTML();
+		return _getNavLoginHTML();
 	}
+}
+
+function _getNavlogoutHTML(){
+	return "<p class=\"navbar-text navbar-right\">Du är inloggad som ".getCurrentRightsLabel()." - <a href=\"#\" onclick=\"logout();\">Logga ut</a></p>";
+}
+function _getNavLoginHTML(){
+	return "<button type=\"button\" class=\"btn btn-success navbar-btn navbar-right\" data-toggle=\"modal\" data-target=\"#loginModal\">Logga in</button>";
 }
 
 

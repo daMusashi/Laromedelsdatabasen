@@ -7,8 +7,9 @@
 	class Bok extends Dataobject
 	{
     	const TABLE = "bocker"; // tabellnamn
-		const TABLE_BOKNING = "kurser_bocker"; // tabellnamn
+		const TABLE_BOKNING = Bokning::TABLE; // tabellnamn
 		
+		const FN_ID = "id"; // field name
 		const FN_ISBN = "isbn"; // field name
 		const FN_TITEL = "titel"; // field name
 		const FN_UPPLAGA = "upplaga"; // field name
@@ -21,7 +22,7 @@
 		const FN_FORLAG = "forlag"; // field name
 		const FN_UTGIVNING = "utgivnings_ar"; // field name
 
-		const PK_ID = self::FN_ISBN; // fieldname PRIMARY key
+		const PK_ID = self::FN_ID; // fieldname PRIMARY key
 		const FK_ID = "bok_id"; // fieldname FOREIGN key
 
 		const DEFAULT_ORDER_BY = self::FN_TITEL ; // standardsortering
@@ -43,6 +44,7 @@
 		public $fullTitel = "";
 
 		public $urlView = "#";
+		public $urlSave = "#";
 		public $urlEdit = "#";
 		public $urlDelete = "#";
 		public $urlBoka = "#";
@@ -93,9 +95,9 @@
 	
 	private function generateProps(){
 	
-		$this->id = $this->isbn;
 		$this->fullTitel = $this->getFullBokTitel();
 
+		$this->urlSave = "?".CONFIG::PARAM_PRIM_NAV."=bocker-save";
 		$this->urlView = "?".CONFIG::PARAM_PRIM_NAV."=bocker-view&".CONFIG::PARAM_REF_ID."=".$this->isbn;
 		$this->urlEdit = "?".CONFIG::PARAM_PRIM_NAV."=bocker-edit&".CONFIG::PARAM_REF_ID."=".$this->isbn;
 		$this->urlDelete = "?".CONFIG::PARAM_PRIM_NAV."=bocker-delete&".CONFIG::PARAM_REF_ID."=".$this->isbn;
@@ -104,6 +106,7 @@
 	
 	public function setFromAssoc($bokAccFieldArray = NULL){
 		if($bokAccFieldArray){
+			$this->id = $bokAccFieldArray[self::FN_ID];
 			$this->isbn = $bokAccFieldArray[self::FN_ISBN];
 			$this->titel = $bokAccFieldArray[self::FN_TITEL];
 			$this->upplaga = $bokAccFieldArray[self::FN_UPPLAGA];
@@ -124,7 +127,20 @@
 		}
 	}
 	
-	public function setFromId($isbn = NULL){
+	public function setFromId($id){
+		$q = "SELECT * FROM " . self::TABLE . " WHERE " . self::PK_ID . " = '" . $id . "'";
+		
+		$result = mysqli_query(Config::$DB_LINK, $q);
+	
+		if(mysqli_num_rows($result) == 1){
+			$this->setFromAssoc(mysqli_fetch_assoc($result));
+			$this->isEmpty = false;
+		} else {
+			$this->isEmpty = true;
+		}
+	}
+
+	public function setFromISBN($isbn){
 		$q = "SELECT * FROM " . self::TABLE . " WHERE " . self::FN_ISBN . " = '" . $isbn . "'";
 		
 		$result = mysqli_query(Config::$DB_LINK, $q);
@@ -154,7 +170,7 @@
 				self::FN_UNDERTITEL . "='" . $this->undertitel . "', " .
 				self::FN_FORLAG . "='" . $this->forlag . "', " .
 				self::FN_UTGIVNING . "='" . $this->utg_ar. "' " .
-				"WHERE " . self::FN_ISBN  . " = '" . $this->isbn . "'";
+				"WHERE " . self::FN_ID  . " = '" . $this->id . "'";
 
 				//print "<p>UPDATE: $q</p>";
 				$success = mysqli_query(Config::$DB_LINK, $q);
@@ -204,7 +220,7 @@
 
 	public function delete(){
 		if($this->isValid()){
-			$q = "DELETE FROM bocker WHERE ".self::FN_ISBN." = '" . $this->isbn. "'";
+			$q = "DELETE FROM bocker WHERE ".self::FN_ID." = '" . $this->iid. "'";
 			
 			if(mysqli_query(Config::$DB_LINK, $q) == 1){
 				return true;
@@ -230,6 +246,7 @@
 
 		$output = "<h3>* Bok-instans *</h3>";
 		$output .= "<ul>";
+		$output .= self::_propToStringListitem("isbn", $this->id);
 		$output .= self::_propToStringListitem("isbn", $this->isbn);
 		$output .= self::_propToStringListitem("upplaga", $this->upplaga);
 		$output .= self::_propToStringListitem("forf_fornamn", $this->forf_fornamn);
@@ -253,10 +270,11 @@
 
 	
 
-	public function getAntalBokade(){
+	public function getAntalBokade($terminId, $forLasar = false){
 		//print "<h4>Bok::getAntalBokade</h4>";
 		$num = 0;
-		$bokningarForBok = Bokning::getForBok($this->isbn);
+		// TODO få en id-lista istället för objekt
+		$bokningarForBok = Bokning::getForBok($this->id, $terminId, $forLasar); //getForBok($this->isbn);
 		foreach($bokningarForBok as $bokning){
 			//print "<br>--b kursId=".$bokning->kursId;
 			//$kurs = new Kurs($bokning->kursId);
@@ -271,13 +289,13 @@
 		//return $this->antal - antalBokade();
 	//}
 	
-	public function getHtmlTdSnippet($index = 0, $antalBokadeObj = null, $linkBokning = false, $bokningsKursId = null){ // om bokning måste kursId med
+	public function getHtmlTdSnippet($index, $terminId, $forLasar = false, $linkBokning = false, $bokningsKursId = null){ // om bokning måste kursId med
 		
-		if(empty($antalBokadeObj)){
-			$antal = $this->getAntalBokade();
-		} else {
-			$antal = $antalBokadeObj;
-		}
+		//if(empty($antalBokadeObj)){
+			$antal = $this->getAntalBokade($terminId, $forLasar);
+		//} else {
+			//$antal = $antalBokadeObj;
+		//}
 
 		$collapseHTML = "";
 		$collapseId = "bok-info-$index";
@@ -287,7 +305,7 @@
 			
 			$collapseHTML .= "<div class=\"collapse bok-info\" id=\"$collapseId\">";
 			$collapseHTML .= "<p>Bokade: <strong>" . $antal->bokade . "</strong> av " . $antal->antal . "</p>";
-			$collapseHTML .= "<div>";
+			$collapseHTML .= "<div class=\"btn-group btn-group-sm\" role=\"group\">";
 			if($linkBokning){
 				// bokningsknappar
 				$bokningsId = Bokning::makeUrlId($this->id, $bokningsKursId);

@@ -17,7 +17,9 @@
 		}
 	}*/
 ?>
-<h1><?php print $rubrik; ?></h1>
+<div class="page-header">
+	<h1><?php print $rubrik; ?></h1>
+</div>
 <?php
 	//if(isAdmin()){
 		print "<p>".HTML_FACTORY::getKnappHTML("bokningar-add", "Gör en bokning", "lg", "success", "Skapa en bokning")."</p>";

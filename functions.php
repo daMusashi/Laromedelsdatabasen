@@ -1,64 +1,41 @@
 <?php
+require_once("db_functions.php");
+require_once("login_functions.php");
+require_once("admin/dev_functions.php");
 
-function isLoggedin(){
-	if(isset($_SESSION["isLoggedin"])&&$_SESSION["isLoggedin"] == true)	{
-		return true;	
-	} else {
-		return false;	
-	}
-}
-
-function isAdmin(){
-	if(isLoggedin()&&isset($_SESSION["isAdmin"])&&$_SESSION["isAdmin"] == true)	{
-		return true;	
-	} else {
-		return false;	
-	}
-}
-
-function isDev(){
-	if(isLoggedin()&&isset($_SESSION["isDev"])&&$_SESSION["isDev"] == true)	{
-		return true;	
-	} else {
-		return false;	
-	}
-}
-
-
-function printNoRights($navRoll){
-	print "<h1>Rättigheter saknas för sidan</h1>";
-	print "<p>Rättighetsnivå '".getRightsLabelOfNavRoll($navRoll)."' krävs för innehållet. Du har har '".getCurrentRightsLabel()."'.</p>";
-}
-
-function getRightsLabelOfNavRoll($navRoll){
-	switch($navRoll){
-		case "admin":
-			$label = "Administratör";
-			break;
+function includeContent($roll, $includeFile){
+	switch($roll){
 		case "dev":
-			$label = "Utvecklare";
+			//print "dev";
+			if(isDev()){
+				include($includeFile);
+			} else {
+				printNoRights($roll);	
+			}
+			break;
+		case "admin":
+			//print "admin";
+			if(isAdmin()){
+				include($includeFile);
+			} else {
+				printNoRights($roll);	
+			}
 			break;
 		case "user":
-			$label = "Inloggad";
+			//print "user";
+			if(isLoggedin()){
+				include($includeFile);
+			} else {
+				printNoRights($roll);	
+			}
 			break;
 		default:
-			$label = "Ej inloggad";
+			//print "alla";
+			include($includeFile);
 	}
-	return $label;
 }
-function getCurrentRightsLabel(){
-	$label ="ej inloggad";
-	if(isAdmin()){
-		$label = "Adminstratör";	
-	}
-	if(isDev()){
-		$label = "Utvecklare";	
-	}
-	if(isLoggedin()){
-		$label = "Användare";	
-	}
-	return $label;
-}
+
+
 
 // Skriver ut en array som lista
 function printArrayAsList($arr, $rubrik = "", $class = "data-list-box"){

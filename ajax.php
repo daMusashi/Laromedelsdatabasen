@@ -7,7 +7,7 @@ require_once("db_functions.php");
 require_once("functions.php");
 require_once("admin/dev_functions.php");
 
-require_once("connect.php");
+require_once("db_connect.php");
 ?>
 <?php
 if(isset($_GET[Config::PARAM_AJAX])){

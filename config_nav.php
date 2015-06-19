@@ -1,15 +1,15 @@
 <?php
 // Navigering
-$NAV["bocker"]["include"] = "page_bocker_lista.php";
-$NAV["bocker"]["label"] = "Böcker";
-$NAV["bocker"]["roll"] = "all";
-$NAV["bocker"]["place"] = "main";
-
 
 $NAV["kurser"]["include"] = "page_kurser.php";
 $NAV["kurser"]["label"] = "Kurser";
 $NAV["kurser"]["roll"] = "all";
 $NAV["kurser"]["place"] = "main";
+
+$NAV["bocker"]["include"] = "page_bocker_lista.php";
+$NAV["bocker"]["label"] = "Böcker";
+$NAV["bocker"]["roll"] = "all";
+$NAV["bocker"]["place"] = "main";
 
 $NAV["bokningar"]["include"] = "page_bokningar_lista.php";
 $NAV["bokningar"]["label"] = "Bokningar";

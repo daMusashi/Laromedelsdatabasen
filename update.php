@@ -5,18 +5,35 @@
 <title>Läromedel UPDATE</title>
 <?php
 	require_once("config.php");
-	require_once("connect.php");
+	require_once("db_connect.php");
 	require_once("admin/db_update_functions.php");
+	require_once("class_kurs.php");
 ?>
+<style>
+.warning {
+	font-weight: bold;
+	color: red;
+}
+</style>
 </head>
 
 <body>
 <h1>Löromedel UPDATE</h1>
 <?php
-	//gjord maj 2015 på DEV HOME --- toTillfalle();
-	//gjord maj 2015 på DEV HOME --- toOspec();
-	//gjord maj 2015 på DEV HOME --- toTillfalleNullFix();
-	//gjord maj 2015 på DEV HOME --- addTimeToKurser();
+	
+	
+
+	////addTimeToKurser();
+	////moveTimeToKurser();
+	
+	//renameBokningar();
+	//removeTimeFromBokningar(); 
+	//createIds();
+	//createNewIdsBinds();
+
+
+	/* dev-data */
+	createRandomKurser(20);
 ?>
 </body>
 </html>

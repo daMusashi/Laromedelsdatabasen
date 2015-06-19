@@ -1,14 +1,14 @@
 <?php
-	global $CONFIG;
-
 	require_once("class_kurs.php");
 	require_once("class_bok.php");
 	require_once("class_larare.php");
 	require_once("class_html_factory.php");
-	require_once("class_tillfalle.php");
-	require_once("class_tillfalle_occasion.php");
+	require_once("class_lasar.php");
+
 ?>
-<h1>Kurser</h1>
+<div class="page-header">
+	<h1>Kurser</h1>
+</div>
 
 <div class="info-box">
 <p>Välj en kurs för att se detaljerad information om bokningningarna för den (kurser utan bokningar är inte valbara)</p>
@@ -17,43 +17,15 @@
 <?php
 
 if(isset($_GET[Config::PARAM_ID])){
-	$activeLasar = $_GET[Config::PARAM_ID];
+	$activeLasar = new Lasar();
+	$activeLasar->setFromId($_GET[Config::PARAM_ID]);
 } else {
-	$activeLasar = Tillfalle_year::getCurrentLasarId();
+	$activeLasar = Lasar::getCurrentLasar();
 }
 
-$kurser = Kurs::getAll();
+print Lasar::getTabsHTML("kurser", $activeLasar->id, true);
 
-$lasar = [];
-foreach($kurser as $kurs){
-	$startYear = $kurs->startTid->year;
-	$slutYear = $kurs->slutTid->year;
-	
-	if (!array_key_exists($startYear->id, $lasar)){
-		
-		$lasar[$startYear->id] = $startYear->desc;
-	}
-	if (!array_key_exists($slutYear->id, $lasar)){
-		
-		$lasar[$slutYear->id] = $slutYear->desc;
-	}
-}
-
-print "<p>$activeLasar</p>";
-
-print "<ul class=\"nav nav-tabs\">";
-foreach($lasar as $id=>$desc){
-	$active = "";
-	if($id == $activeLasar){
-		$active = " class=\"active\"";
-	}
-
-	$a = "<a href=\"?".Config::PARAM_NAV."=kurser&".Config::PARAM_ID."=$id\">$desc</a>";
-	print "<li role=\"presentation\"$active>$a</li>";
-}
-print "</ul>";
-
-$Selectedkurser = Kurs::getAllForLasar($activeLasar);
+$Selectedkurser = Kurs::getAllForTermin($activeLasar->getFirstTerminId(), true);
 
 
 ?>
@@ -83,17 +55,18 @@ foreach($Selectedkurser as $kurs){
 	}
 	print "</td>";
 	
-	print "<td class=\"major\">" . $kurs->id . "</td>";
+	print "<td class=\"major\">" . $kurs->namn . "</td>";
 	
-	print "<td class=\"minor\">" .  $kurs->antalElever . "</td>";
+	print "<td class=\"minor\">" .  Kurs::getAntalElever($kurs->id) . "</td>";
 
-	print "<td class=\"minor\">" .  $kurs->startTid->desc. "</td>";
-	print "<td class=\"minor\">" .  $kurs->slutTid->desc. "</td>";
+	print "<td class=\"minor\">" .  $kurs->startTermin->desc. "</td>";
+	print "<td class=\"minor\">" .  $kurs->slutTermin->desc. "</td>";
 
 	
 	$lararStr = "";
-	if(count($kurs->larare) > 0){
-		foreach($kurs->larare as $larare){
+	$lararList = Kurs::getLarare($kurs->id);
+	if(count($lararList) > 0){
+		foreach($lararList as $larare){
 			$lararStr = $lararStr . $larare->id . "<br />";
 		}
 	} else {
@@ -102,10 +75,11 @@ foreach($Selectedkurser as $kurs){
 	print "<td class=\"minor\">$lararStr</td>";
 	
 	print "<td>";
-	if(count($kurs->bocker) > 0){
+	$bokList = Kurs::getBocker($kurs->id);
+	if(count($bokList) > 0){
 		print "<div>";
-		foreach($kurs->bocker as $bok){
-			print $bok->getHtmlTdSnippet($bokIndex, null, true, $kurs->id);
+		foreach($bokList as $bok){
+			print $bok->getHtmlTdSnippet($bokIndex, $activeLasar->getFirstTerminId(), true, true, $kurs->id);
 			$bokIndex++;	
 		}
 		print "</div>";
