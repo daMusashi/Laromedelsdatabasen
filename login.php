@@ -1,4 +1,4 @@
-<?php if(!isLoggedIn()){ ?>}
+<?php if(!isLoggedIn()){ ?>
 <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="Logga in" aria-hidden="true">
   <div class="modal-dialog">
     

@@ -4,6 +4,7 @@
 <?php require_once("class_html_factory.php"); ?>
 <?php require_once("db_connect.php"); ?>
 <?php require_once("login_validate.php"); ?>
+<?php require_once("class_termin.php"); ?>
 <!doctype html>
 <html>
 <head>
@@ -16,15 +17,21 @@
 <?php //<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"> ?>
 <link rel="stylesheet" href="css/bootstrap.css">
 <link rel="stylesheet" href="css/laromedel.css">
-<!-- Latest compiled and minified JavaScript -->
 <link rel="stylesheet" href="css/temporary.css">
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+<script>
+$(document).ready(function(){
+	$('[data-toggle="tooltip"]').tooltip();
+});
+</script>
 
 </head>
 
 <body>
    
 <?php 
+	
 	if(CONFIG::$DB_SUCCESS){  
 		require_once("login.php");
 	}
@@ -36,7 +43,10 @@
 
 <div id="content" class="content container"><div class="inner">
 
+<p></p>
 <?php 
+
+require_once("notice.php");
 
 if(CONFIG::$DB_SUCCESS){  
 

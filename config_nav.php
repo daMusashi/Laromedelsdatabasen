@@ -1,6 +1,14 @@
 <?php
 // Navigering
 
+$NAV["print"]["include"] = "page_print.php";
+$NAV["print"]["label"] = "Skriv ut";
+$NAV["print"]["roll"] = "user";
+$NAV["print"]["place"] = "main";
+
+$NAV["bok"]["include"] = "page_bok.php";
+$NAV["bok"]["label"] = "<hidden>";
+$NAV["bok"]["roll"] = "admin";
 
 $NAV["kurser"]["include"] = "page_kurser.php";
 $NAV["kurser"]["label"] = "Kurser";
@@ -8,7 +16,7 @@ $NAV["kurser"]["roll"] = "all";
 $NAV["kurser"]["place"] = "main";
 
 $NAV["bocker"]["include"] = "page_bocker_lista.php";
-$NAV["bocker"]["label"] = "Böcker";
+$NAV["bocker"]["label"] = "Läromedel";
 $NAV["bocker"]["roll"] = "all";
 $NAV["bocker"]["place"] = "main";
 
@@ -16,11 +24,6 @@ $NAV["bokningar"]["include"] = "page_bokningar_lista.php";
 $NAV["bokningar"]["label"] = "Bokningar";
 $NAV["bokningar"]["roll"] = "user";
 $NAV["bokningar"]["place"] = "main";
-
-$NAV["print"]["include"] = "page_print.php";
-$NAV["print"]["label"] = "Skriv ut";
-$NAV["print"]["roll"] = "user";
-$NAV["print"]["place"] = "main";
 
 $NAV["bok"]["include"] = "page_bok.php";
 $NAV["bok"]["label"] = "<hidden>";
@@ -107,5 +110,15 @@ $NAV["admin-backup"]["include"] = "admin/admin_backup.php";
 $NAV["admin-backup"]["label"] = "Backup";
 $NAV["admin-backup"]["roll"] = "admin";
 $NAV["admin-backup"]["place"] = "admin";
+
+$NAV["admin-arkivera"]["include"] = "admin/admin_arkivera.php";
+$NAV["admin-arkivera"]["label"] = "Arkivera";
+$NAV["admin-arkivera"]["roll"] = "admin";
+$NAV["admin-arkivera"]["place"] = "admin";
+
+$NAV["admin-arkivera-allt-older"]["include"] = "admin/admin_arkivera.php";
+$NAV["admin-arkivera-allt-older"]["label"] = "<hidden>";
+$NAV["admin-arkivera-allt-older"]["roll"] = "admin";
+
 
 ?>

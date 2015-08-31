@@ -1,0 +1,93 @@
+.loading {
+    display: inline-block;
+}
+
+.loading > div {
+    background-color:#000;
+    float:left;
+    height:10px;
+    margin-left:5px;
+    width:2px;
+    opacity:0.1;
+
+    /* css3 transform - scale */
+    -webkit-transform:scale(0.8);
+    -moz-transform:scale(0.8);
+    -o-transform:scale(0.8);
+
+    /* css3 animation */
+    -webkit-animation-name:loading;
+    -webkit-animation-duration:1.2s;
+    -webkit-animation-iteration-count:infinite;
+    -webkit-animation-direction:linear;
+    -moz-animation-name:loading;
+    -moz-animation-duration:1.2s;
+    -moz-animation-iteration-count:infinite;
+    -moz-animation-direction:linear;
+    -o-animation-name:loading;
+    -o-animation-duration:1.2s;
+    -o-animation-iteration-count:infinite;
+    -o-animation-direction:linear;
+}
+.loading > div:nth-child(1) {
+    /* css3 animation */
+    -webkit-animation-delay:0.24s;
+    -moz-animation-delay:0.24s;
+    -o-animation-delay:0.24s;
+}
+.loading > div:nth-child(2) {
+    /* css3 animation */
+    -webkit-animation-delay:0.48s;
+    -moz-animation-delay:0.48s;
+    -o-animation-delay:0.48s;
+}
+.loading > div:nth-child(3) {
+    /* css3 animation */
+    -webkit-animation-delay:0.72s;
+    -moz-animation-delay:0.72s;
+    -o-animation-delay:0.72s;
+}
+.loading > div:nth-child(4) {
+    /* css3 animation */
+    -webkit-animation-delay:0.96s;
+    -moz-animation-delay:0.96s;
+    -o-animation-delay:0.96s;
+}
+.loading > div:nth-child(5) {
+    /* css3 animation */
+    -webkit-animation-delay:1.2s;
+    -moz-animation-delay:1.2s;
+    -o-animation-delay:1.2s;
+}
+
+/* css3 keyframes - loading */
+@-webkit-keyframes loading {
+    0% {
+        -webkit-transform:scale(1.2);
+        opacity:1;
+    }
+    100% {
+        -webkit-transform:scale(0.7);
+        opacity:0.1;
+    }
+}
+@-moz-keyframes loading {
+    0% {
+        -moz-transform:scale(1.2);
+        opacity:1;
+    }
+    100% {
+        -moz-transform:scale(0.7);
+        opacity:0.1;
+    }
+}
+@-o-keyframes loading {
+    0% {
+        -o-transform:scale(1.2);
+        opacity:1;
+    }
+    100% {
+        -o-transform:scale(0.7);
+        opacity:0.1;
+    }
+}

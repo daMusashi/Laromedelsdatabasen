@@ -1,18 +1,59 @@
-@media -sass-debug-info{filename{font-family:file\:\/\/E\:\/Dropbox\/Arbete\/htdocs\/laromedel\/sass\/_laromedel_tables\.scss}line{font-family:\000038}}
-table.main tr.unavaible a {
-  color: #666;
-}
-@media -sass-debug-info{filename{font-family:file\:\/\/E\:\/Dropbox\/Arbete\/htdocs\/laromedel\/sass\/_laromedel_tables\.scss}line{font-family:\0000313}}
-table.main td {
-  color: #bbb;
-}
-@media -sass-debug-info{filename{font-family:file\:\/\/E\:\/Dropbox\/Arbete\/htdocs\/laromedel\/sass\/_laromedel_tables\.scss}line{font-family:\0000317}}
-table.main td.major {
-  font-weight: bold;
-  font-size: 110%;
-}
-@media -sass-debug-info{filename{font-family:file\:\/\/E\:\/Dropbox\/Arbete\/htdocs\/laromedel\/sass\/_laromedel_tables\.scss}line{font-family:\0000322}}
-table.main td.minor {
-  font-weight: normal;
-  font-size: 70%;
-}
+html { overflow-y: scroll; }
+
+header.site-header .branding { background-color: #444; color: #eee; }
+header.site-header .branding h1 { font-size: 140%; margin: 0px; margin-top: 3px; margin-bottom: 3px; }
+header.site-header .branding h1 .version { font-size: 50%; color: #aaa; }
+
+#main { padding-top: 80px; }
+
+footer { text-align: right; margin-top: 20px; padding-top: 5px; border-top-style: solid; border-top-color: #aaa; border-top-width: 1px; color: #aaa; font-size: 70%; }
+
+.alert h3 { margin: 0px; }
+
+.nav-tabs .active { font-weight: bold; }
+.nav-tabs.welled { border-bottom: none; }
+.nav-tabs.welled li.active a { background-color: #f5f5f5; }
+
+#nav-main .navbar-nav a.active { font-weight: bold; }
+
+table.table > tbody > tr > td { color: #333; vertical-align: middle; }
+table.table.main th { color: #aaa; }
+table.table.main tr.unavaible a { color: #666; }
+table.table.main tr.bg-danger { background-color: #eba5a3; }
+table.table.main td.major { font-weight: bold; font-size: 100%; }
+table.table.main td.minor { font-weight: normal; font-size: 75%; color: #666; }
+table.table.main td .info { font-weight: normal; font-size: 80%; }
+table.table.main td .info p { margin: 0px; }
+table.table.main td .info strong { font-weight: bold; }
+table.table.kurser .bocker { width: 30%; }
+table.table.kurser .bocker em { color: #777777; }
+
+form .form-group .help-block { font-size: 80%; font-style: italic; }
+form.view .form-group label { color: #777777; font-weight: normal; margin: 0px; }
+form.view .form-group .form-control-static { font-weight: bold; font-size: 130%; margin-top: 0px; }
+
+.utskrift-data { margin-bottom: 100px; border-bottom-width: 2px; border-bottom-style: solid; border-bottom-color: #333; }
+.utskrift-data header { margin-bottom: 30px; position: relative; }
+.utskrift-data header .print-logo { position: absolute; right: 0px; top: 0px; height: 100px; }
+
+.loading { display: inline-block; }
+
+.loading > div { background-color: #000; float: left; height: 10px; margin-left: 5px; width: 2px; opacity: 0.1; /* css3 transform - scale */ -webkit-transform: scale(0.8); -moz-transform: scale(0.8); -o-transform: scale(0.8); /* css3 animation */ -webkit-animation-name: loading; -webkit-animation-duration: 1.2s; -webkit-animation-iteration-count: infinite; -webkit-animation-direction: linear; -moz-animation-name: loading; -moz-animation-duration: 1.2s; -moz-animation-iteration-count: infinite; -moz-animation-direction: linear; -o-animation-name: loading; -o-animation-duration: 1.2s; -o-animation-iteration-count: infinite; -o-animation-direction: linear; }
+
+.loading > div:nth-child(1) { /* css3 animation */ -webkit-animation-delay: 0.24s; -moz-animation-delay: 0.24s; -o-animation-delay: 0.24s; }
+
+.loading > div:nth-child(2) { /* css3 animation */ -webkit-animation-delay: 0.48s; -moz-animation-delay: 0.48s; -o-animation-delay: 0.48s; }
+
+.loading > div:nth-child(3) { /* css3 animation */ -webkit-animation-delay: 0.72s; -moz-animation-delay: 0.72s; -o-animation-delay: 0.72s; }
+
+.loading > div:nth-child(4) { /* css3 animation */ -webkit-animation-delay: 0.96s; -moz-animation-delay: 0.96s; -o-animation-delay: 0.96s; }
+
+.loading > div:nth-child(5) { /* css3 animation */ -webkit-animation-delay: 1.2s; -moz-animation-delay: 1.2s; -o-animation-delay: 1.2s; }
+
+/* css3 keyframes - loading */
+@-webkit-keyframes loading { 0% { -webkit-transform: scale(1.2); opacity: 1; }
+  100% { -webkit-transform: scale(0.7); opacity: 0.1; } }
+@-moz-keyframes loading { 0% { -moz-transform: scale(1.2); opacity: 1; }
+  100% { -moz-transform: scale(0.7); opacity: 0.1; } }
+@-o-keyframes loading { 0% { -o-transform: scale(1.2); opacity: 1; }
+  100% { -o-transform: scale(0.7); opacity: 0.1; } }

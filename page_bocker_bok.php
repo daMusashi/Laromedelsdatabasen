@@ -1,5 +1,6 @@
 <?php
 require_once("class_bok.php");
+require_once("page_functions_navs.php");
 
 $selectedBokId = "";
 $mode = "view";
@@ -14,57 +15,58 @@ if(isset($_GET[Config::PARAM_NAV])){
 	$mode = $_GET[Config::PARAM_NAV];
 }
 
+
+
 switch($mode){
 	case "bocker-edit":
-		$rubrik = "Ändra information för bok";
 		$mode = "edit";
 		break;
 	case "bocker-add":
-		$rubrik = "Lägga till en bok";
 		$mode = "add";
 		break;
 	case "bocker-view":
-		$rubrik = "Information om bok";
 		$mode = "view";
 		break;
 	case "bocker-save":
-		$rubrik = "Boken är sparad";
 		$mode = "save";
 		break;
 	case "bocker-delete":
-		$rubrik = "Boken har raderats";
 		$mode = "delete";
 		break;
 		
 }
 
+if(isLoggedin()) { 
+	include("include_js_form_bok.php");
+}
+
 //print "<h1>$rubrik</h1>";
 
+$bok = new Bok();
+
 if($mode == "delete"){
-	$bok = new Bok();
 	$bok->setFromId($_GET[Config::PARAM_REF_ID]);
 	$deleteSuccess = $bok->delete();
 } else {
 
-	if(($mode == "save")&&($_POST["isbn"])){
-		//var_dump($_POST);
-		$newBok = new Bok($_POST);
+	if($mode == "save"){
+		$bok->setFromForm($_POST);
 		//print $newBok->toString();
 
-
-		if($newBok->save()){
-			$selectedBokId = $_POST["isbn"];
+		try {
+			$bok->save();
 			$saveSuccess = true;
 			$mode = "view"; // växlar läge till view för att se sparad data
 
-		} else {
-			$rubrik = "<span class=\"warning\">Sparandet av boken  misslyckades :(</span>";
+		} catch (Exception $e) {
+			$rubrik = "<span class=\"warning\">Sparandet av boken misslyckades :(</span>";
 			$saveSuccess = false;
 			$mode = "add"; // växlar läge till add vid olycka
+			HTML_FACTORY::printErrorAlert("Ett fel inträffade när boken skulle sparas :´(", $e->getMessage());
 		}
 	}
 
-	$bok = new Bok();
+	
 	$antal = new Bokantal();
 	if(($mode != "add")&&($saveSuccess)){
 		$bok->setFromId($selectedBokId);
@@ -99,27 +101,48 @@ if($mode == "delete"){
 	}
 
 	$arkiveradUI = HTML_FACTORY::getHiddenFieldHTML(Bok::FN_ARKIVERAD, $bok->arkiverad);
+	$idUI = HTML_FACTORY::getHiddenFieldHTML(Bok::FN_ID, $bok->id);
 
 } // slut if DELETE
 
 	if($mode == "delete"){ 
 		if($deleteSuccess){
-			print "<h2>Boken har raderats</h2>";
-			print "<p>Observera att eventuella <strong>bokningar</strong> finns för boken finns kvar i arkiverat läge. Bara bokens ISBN är känt om boken för de arkiverade bokningarna</p>";
+			print "<div class=\"alert alert-success\" role=\"alert\">Boken <strong>".$bok->getFullBokTitel()."</strong> har raderats</div>";
 		} else {
 			print "<h2>Ett fel har uppstått</h2>";
 			print "<p>Boken har INTE raderats. Kontakta utvecklare (Martin)</p>";
 		}
 	} else {
 
-			if($dbDebug != ""){ 
-				//print $dbDebug; 
+		switch($mode){
+			case "edit":
+				$rubrik = "Ändra information för '".$bok->titel."'";
+				break;
+			case "add":
+				$rubrik = "Lägg till läromedel";
+				break;
+			case "view":
+				$rubrik = "Information om '".$bok->titel."'";
+				$mode = "view";
+				break;
+			case "save":
+				$rubrik = "Läromedlet är sparad";
+				break;
+			case "delete":
+				$rubrik = "Läromedlet har raderats";
+				break;
 			} 
 		?>
-	
-		<form id="form-bocker" method="post" action="<?php print $bok->urlSave ?>">
+		
+		<h2><?php print $rubrik ?></h2>
+
+		<form id="form-bocker" class="<?php print $mode; ?>" method="post" action="<?php print $bok->getSaveUrl(); ?>">
 		<input type="hidden" id="form-mode" name="form-mode" value="idle" />
 		
+		<?php if($mode == "view") { ?>
+			<div class="well">
+		<?php } ?>
+
 		<?php
 
 			print "<div class=\"row\">";
@@ -144,8 +167,13 @@ if($mode == "delete"){
 			print $efternamnUI;
 			print "</div>";
 
-			// print $arkiveradUI; 
+			print $arkiveradUI; 
+			print $idUI; 
 		?>
+
+		<?php if($mode == "view") { ?>
+			</div>
+		<?php } ?>
 
 <?php } // slut if DELETE 2 ?>
 
@@ -154,29 +182,42 @@ if($mode == "delete"){
 	switch($mode){ 
 		case "add":
 			print HTML_FACTORY::getSubmitKnappHTML("Spara", $size = "", $flair = "success", $submitParam = "save", $title = "Spara boken");
-			print HTML_FACTORY::getKnappHTML("bocker", "Avbryt", "", "warning", "Spara inte");
+			print HTML_FACTORY::getKnappHTML("?".Config::PARAM_NAV."=bocker", "Avbryt", "", "warning", "Spara inte");
 			break;
 		case "edit":
-			print HTML_FACTORY::getSubmitKnappHTML("Spara", $size = "", $flair = "success", $submitParam = "update", $title = "Spara ändringen");
-			print HTML_FACTORY::getKnappHTML("bocker", "Avbryt", "", "warning", "Spara inte");
+			print HTML_FACTORY::getSubmitKnappHTML("Spara", $size = "", $flair = "success", $submitParam = "save", $title = "Spara ändringen");
+			print HTML_FACTORY::getKnappHTML("?".Config::PARAM_NAV."=bocker", "Avbryt", "", "warning", "Spara inte");
 			break;
 		default:
-			if(isAdmin() && $mode !="delete"){
-				//print getKnappHTML("bocker&" . $CONFIG["secNavParam"] . "=delete&" . $CONFIG["refIdParam"] . "=" . $bok["isbn"], "Radera", "button-red", "Radera boken", "big");
-				print HTML_FACTORY::getSubmitKnappHTML("Radera", $size = "", $flair = "danger", $submitParam = "delete", $title = "Radera boken");
-				print HTML_FACTORY::getKnappHTML("bocker-edit&" . Config::PARAM_REF_ID . "=" . $bok->isbn, "Ändra", "", "warning", "Ändra boken");
-			}
-			print HTML_FACTORY::getKnappHTML("bocker", "Tillbaka", "", "primary", "Till boklistan");
+			print HTML_FACTORY::getKnappHTML("?".Config::PARAM_NAV."=bocker", "Tillbaka", "", "primary", "Till boklistan");
 			
  	} 
 ?>
 
 </div>
-
-
 </form>
-
 </div>
+
+
+<?php if(($mode == "view")&&(isLoggedIn())){ ?>
+<div style="margin-top:40px">
+<h2>Bokningar för '<?php print $bok->titel ?>'</h2>
+<?php 
+	$activeTermin = new Termin();
+	$activeTermin->setFromId($_SESSION["active-termin"]);
+	print getTabsAjaxHTML("bok-bokningar-termniner-tab", "bokningar", $activeTermin->id, "get-bokningar-boklist", "ajax-list-container", true, $bok->id); 
+?>
+<div id="ajax-list-container" class="well"></div>
+</div>
+<script>
+	$(document).ready(function(){
+		$('#ajax-list-container').html('<?php print Config::LOADING_HTML; ?>');
+		$.get('ajax.php?<?php print Config::PARAM_AJAX; ?>=get-bokningar-boklist&<?php print Config::PARAM_ID; ?>=<?php print $_SESSION["active-termin"]; ?>&<?php print Config::PARAM_REF_ID; ?>=<?php print $bok->id; ?>', function(data){
+			$('#ajax-list-container').html(data);
+		});
+	});
+</script>
+<?php } ?>
 <?php 
 	//HTML_FACTORY::printPanel("default", "Bokingar för boken", "<em>Boken har inga bokningar</em>");
 
@@ -188,7 +229,5 @@ function displayValue($value){
 	}
 }
 
-function submitForm(){
 
-}
 ?>

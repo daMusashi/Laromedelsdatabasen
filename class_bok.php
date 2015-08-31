@@ -45,7 +45,6 @@
 		public $fullTitel = "";
 
 		public $urlView = "#";
-		public $urlSave = "#";
 		public $urlEdit = "#";
 		public $urlDelete = "#";
 		public $urlBoka = "#";
@@ -57,6 +56,18 @@
 		Statics
 	*/
 	
+	public static function getAddUrl(){
+		return "?".CONFIG::PARAM_NAV."=bocker-add";
+	}
+
+	public static function getSaveUrl(){
+		return "?".CONFIG::PARAM_NAV."=bocker-save";
+	}
+
+	public static function getViewUrl($bokId){
+		return "?".CONFIG::PARAM_NAV."=bocker-view&".CONFIG::PARAM_REF_ID."=".$bokId;
+	}
+
 	public static function getSelectHTML($fieldDescription = "", $selectedId = "", $elementId = "select-bok"){
 		$bocker = self::getAll();
 		$bockerSelectArr = [];
@@ -65,7 +76,7 @@
 			$bockerSelectArr[$bok->id] = $bok->fullTitel;
 		}
 
-		return HTML_FACTORY::getAssocArrayAsSelectHTML($bockerSelectArr, $elementId, "Välj en bok...", "Bok", $fieldDescription, $selectedId, "300", $elementId);
+		return HTML_FACTORY::getAssocArrayAsSelectHTML($bockerSelectArr, $elementId, "Välj ett läromedel...", "Läromedel", $fieldDescription, $selectedId, "300", $elementId);
 	}
 
 	public static function getAntalTitlar($inkluderaArkiverade = false){
@@ -122,10 +133,10 @@
 		$this->fullTitel = $this->getFullBokTitel();
 
 		$this->urlSave = "?".CONFIG::PARAM_NAV."=bocker-save";
-		$this->urlView = "?".CONFIG::PARAM_NAV."=bocker-view&".CONFIG::PARAM_REF_ID."=".$this->id;
+		$this->urlView = Bok::getViewUrl($this->id);
 		$this->urlEdit = "?".CONFIG::PARAM_NAV."=bocker-edit&".CONFIG::PARAM_REF_ID."=".$this->id;
 		$this->urlDelete = "?".CONFIG::PARAM_NAV."=bocker-delete&".CONFIG::PARAM_REF_ID."=".$this->id;
-		$this->urlBoka = "?" . CONFIG::PARAM_NAV. "=bokningar-add&".CONFIG::PARAM_REF_TYP . "=bok&".CONFIG::PARAM_REF_ID . "=".$this->isbn;
+		$this->urlBoka = "?" . CONFIG::PARAM_NAV. "=bokningar-add&".CONFIG::PARAM_REF_TYP . "=bok&".CONFIG::PARAM_REF_ID . "=".$this->id;
 	}
 	
 	public function setFromAssoc($bokAccFieldArray = NULL){
@@ -142,6 +153,28 @@
 			// pris hoppas över så länge
 			$this->forlag = $bokAccFieldArray[self::FN_FORLAG];
 			$this->utg_ar = $bokAccFieldArray[self::FN_UTGIVNING];
+			
+			$this->generateProps();
+			
+			$this->isEmpty = false;
+		} else {
+			$this->isEmpty = true;
+		}
+	}
+
+	public function setFromForm($formData = NULL){
+		if($formData){
+			$this->id = $formData[self::FN_ID];
+			$this->isbn = $formData[self::FN_ISBN];
+			$this->titel = $formData[self::FN_TITEL];
+			$this->upplaga = $formData[self::FN_UPPLAGA];
+			$this->forf_fornamn = $formData[self::FN_FORF_FNAMN];
+			$this->forf_efternamn = $formData[self::FN_FORF_ENAMN];
+			$this->antal = $formData[self::FN_ANTAL];
+			$this->undertitel = $formData[self::FN_UNDERTITEL];
+			// pris hoppas över så länge
+			$this->forlag = $formData[self::FN_FORLAG];
+			$this->utg_ar = $formData[self::FN_UTGIVNING];
 			
 			$this->generateProps();
 			
@@ -179,9 +212,9 @@
 	
 	public function save(){
 		$success = false;
-
+		//var_dump($this);
 		if($this->isValid()){
-			if(self::_rowExist(self::TABLE, self::FN_ISBN , $this->isbn, true)){
+			if(self::_rowExist(self::TABLE, self::FN_ID , $this->id)){
 				// update
 				$q = "UPDATE " . self::TABLE . 
 				" SET " . 
@@ -227,30 +260,35 @@
 				"'" . $this->utg_ar. "'" .
 				")";
 
-				print "<p>INSERT: $q</p>";
-				$success = mysqli_query(Config::$DB_LINK. $q);
+				//print "<p>INSERT: $q</p>";
+				$success = mysqli_query(Config::$DB_LINK, $q);
 			}
-			print "<p>ERROR: ".mysqli_error()."</p>";
+
 		} else {
+			throw new Exception("Läromedlet saknar essentiella värden och sparas inte.");
 			return false;
 		}
 
 		if($success == 1){
 			return true;
 		} else {
+			throw new Exception("Något gick fel vid sparande av läromedlet.");
 			return false;
 		}
 	}
 
 	public function delete(){
+		//Self::_delete(self::FN_ID." = " . $this->id);
+
 		if($this->isValid()){
-			$q = "DELETE FROM bocker WHERE ".self::FN_ID." = '" . $this->iid. "'";
-			
+			$q = "DELETE FROM ".self::TABLE . " WHERE id = " . $this->id;
+			//print "RADERAR BOKNING $q";
 			if(mysqli_query(Config::$DB_LINK, $q) == 1){
 				return true;
 			} else {
 				return false;
 			} 
+			return true;
 		} else {
 			return false;
 		}
@@ -263,6 +301,57 @@
 		if(empty($this->titel)){$valid = false;}
 
 		return $valid;
+	}
+
+	/* TD-snippet som expanderar vid vidare val i tabell i lista */
+	public static function getTdInfoSnippet($index, $bokObj, $antalObj = null, $bokningsObj = null){
+		
+
+		$collapseHTML = "";
+		$collapseId = "bok-info-$index";
+
+
+
+		if(isLoggedIn()){
+			
+			
+			$collapseHTML .= "<div class=\"collapse info bok-info\" id=\"$collapseId\">";
+			if(!empty($antalObj)){
+				$collapseHTML .= "<p>Bokade: <strong>" . $antalObj->bokade . "</strong> av " . $antalObj->antal . "</p>";
+			}
+			$collapseHTML .= "<div class=\"btn-group btn-group-sm\" role=\"group\">";
+			if(!empty($bokningsObj)){
+				// bokningsknappar
+				$collapseHTML .= HTML_FACTORY::getKnappHTML($bokningsObj->urlView, "Visa bokning", "sm", "primary");
+				if(isAdmin()){
+					$collapseHTML .= HTML_FACTORY::getKnappHTML($bokningsObj->urlEdit, "Redigera bokning", "sm", "warning");
+					$collapseHTML .= HTML_FACTORY::getKnappHTML($bokningsObj->urlDelete, "Radera bokning", "sm", "danger");
+				}
+			} else {
+				// bokknappar
+				$collapseHTML .= HTML_FACTORY::getKnappHTML($bokObj->urlView, "Visa info & bokningar", "sm", "primary");
+				if(isAdmin()){
+					$collapseHTML .= HTML_FACTORY::getKnappHTML($bokObj->urlEdit, "Redigera läromedel", "sm", "warning");
+					$collapseHTML .= HTML_FACTORY::getDeleteKnappHTML($bokObj->urlDelete, $bokObj->fullTitel, "Radera läromedel", "sm", "danger");
+				}
+			}
+			$collapseHTML .= "</div></div>";
+		} 
+	
+
+		$html = "<div class=\"bok-titel\">";		
+			if(isLoggedIn()){
+				$html .= "<a data-toggle=\"collapse\" href=\"#$collapseId\" aria-expanded=\"false\" aria-controls=\"$collapseId\" class=\"titel-link collapsed\">";
+					$html .= "<strong>" . $bokObj->fullTitel . "</strong>";
+				$html .= "</a>";
+			} else {
+				$html .= "<strong>" . $bokObj->fullTitel . "</strong>";
+			}
+		$html .= "</div>";
+		$html .= $collapseHTML;
+
+		return $html;
+
 	}
 
 	public function toString(){
@@ -292,12 +381,37 @@
 		return $output;
 	}
 
-	
+	public static function exists($bokId){
+		if(self::_countRows(self::TABLE, self::FN_ID . " = " . $bokId) > 0){
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public static function getGhostBok($bokId = -999){
+		$ghost = new Bok();
+
+		$ghost->id = $bokId;
+		$ghost->isbn = $ghost->id;
+		$ghost->titel = "** !!RADERAD BOK ID=$bokId!! **";
+		$ghost->forf_efternamn = "ADMIN";
+		$ghost->antal = 0;
+		$ghost->arkiverad  = 0;
+		$ghost->undertitel = "Radera bokningen och gör en ny!";
+		$ghost->pris = 0;
+
+		$ghost->generateProps();
+
+		return $ghost;
+
+	}
 
 	public function getAntalBokade($terminId, $forLasar = false){
 		//print "<h4>Bok::getAntalBokade</h4>";
 		$num = 0;
 
+		//print "<p>bok-id: ".$this->id."</p>";
 		//print "<p>bok.getAntalBokade bokid[".$this->id."]";
 		$bokningarForBok = Bokning::getForBok($this->id, $terminId, $forLasar); //getForBok($this->isbn);
 		//print "<p>Antal bokningar: ".count($bokningarForBok)."</p>";

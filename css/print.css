@@ -1,25 +1,11 @@
-@charset "utf-8";
-@media print {
+.utskrift-data { margin-bottom: 100px; border-bottom-width: 2px; border-bottom-style: solid; border-bottom-color: #333; }
+.utskrift-data header { margin-bottom: 30px; position: relative; }
+.utskrift-data header .print-logo { position: absolute; right: 0px; top: 0px; height: 100px; }
 
-body, div {
-	color: #000;
-	background-color: #FFF;	
-}
-
-.print-elem {
-	
-}
-
-.button-big {
-	display: none;
-}
-
-.button-small {
-	display: none;
-}
-
-.print-elev {
-	page-break-after:always;
-}
-
-}
+@media print { .utskrift-data { page-break-after: always; margin: 0px; border: none; }
+  .utskrift-data th { font-size: 85%; }
+  .utskrift-data td { font-size: 70%; }
+  .utskrift-data td.minor { font-size: 50%; }
+  .utskrift-data td.titel { width: 40%; }
+  .utskrift-data header { margin-bottom: 1.5cm; }
+  .utskrift-data header .print-logo { position: absolute; right: 0px; top: 0px; height: 2cm; } }

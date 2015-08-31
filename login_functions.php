@@ -57,15 +57,16 @@ function getRightsLabelOfNavRoll($navRoll){
 }
 function getCurrentRightsLabel(){
 	$label ="ej inloggad";
+	if(isLoggedin()){
+		$label = "Lärare";	
+	}
 	if(isAdmin()){
 		$label = "Adminstratör";	
 	}
 	if(isDev()){
 		$label = "Utvecklare";	
 	}
-	if(isLoggedin()){
-		$label = "Lärare";	
-	}
+	
 	return $label;
 }
 			

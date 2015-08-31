@@ -26,23 +26,24 @@
 
 			$dataArr[self::FN_ID] = "'" . $id . "'";
 
-			self::_save(self::TABLE, $id, $dataArr, true, false);
+			self::_save(self::TABLE, "HACK_BEHÖVS_EJ_HÄR", $dataArr, true, false);
 
 			return "Klass med id $id IMPORTERAD";
 		} else {
-			return "Klass med id $id finns redan. INTE importerad.";
+			throw new Exception("INGEN import skedde. Klassen finns redan");
+			return false;
 		}
 	}
 
 	public static function getAll($where = NULL){
 		
-		$result = self::_getAllAsResurs(self::TABLE, $where, self::DEFAULT_ORDER_BY, true);
+		$result = self::_getAllAsResurs(self::TABLE, $where, self::DEFAULT_ORDER_BY, false);
 
 		$list = array();
 		while($fieldArray = mysqli_fetch_assoc($result)){
-			$larare = new Larare();
-			$larare->setFromAssoc($fieldArray);
-			array_push($list, $larare);
+			$klass = new Klass();
+			$klass->setFromAssoc($fieldArray);
+			array_push($list, $klass);
 		}
 		
 		return $list;
@@ -51,33 +52,28 @@
 	public static function getAllAsSelectAssoc($where = NULL){
 		
 		$list = [];
-		foreach(self::getAll($where) as $larare){
-			$list[$larare->id] = $larare->namn;
+		foreach(self::getAll($where) as $klass){
+			$list[$klass->id. " (".Klass::getAntalElever($klass->id).")"] = $klass->id;
 		}
 		
 		return $list;
 	}
 
-	public function setFromId($ElevId){
-		$q = "SELECT * FROM " . self::TABLE . " WHERE " . self::PK_ID . " = '" . $ElevId . "'";
-		
-		$result = mysqli_query(Config::$DB_LINK, $q);
-	
-		if(mysqli_num_rows($result) == 1){
-			$this->setFromAssoc(mysqli_fetch_assoc($result));
-			$this->isEmpty = false;
-		} else {
-			$this->isEmpty = true;
-		}
+
+	public static function getAntalElever($klassId){
+		return count(Klass::getElever($klassId));
 	}
 
+	public static function getElever($klassId){
+		$elever = Elev::getAll(Elev::FN_KLASSID . " = '" . $klassId . "'");
 
-	public function setFromAssoc($elevAccFieldArray = NULL){
-		if($elevAccFieldArray){
-			$this->id = $larareAccFieldArray[self::FN_ID];
-			$this->fornamn = $larareAccFieldArray[self::FN_FORNAMN];
-			$this->efternamn = $larareAccFieldArray[self::FN_EFTERNAMN];
-			$this->klass_id = $larareAccFieldArray[self::FN_KLASSID];
+		return $elever;
+	}
+
+	public function setFromAssoc($fieldArray = NULL){
+		if($fieldArray){
+			$this->id = $fieldArray[self::FN_ID];
+
 			$this->generateProps();
 			
 			$this->isEmpty = false;

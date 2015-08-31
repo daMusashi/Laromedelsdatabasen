@@ -1,26 +1,64 @@
-table.main {
-	
-	strong {
-		
-	}
+table.table {
 
-	tr.unavaible {
-		a {
-			color: $color-unavaible;
+	> tbody {
+		> tr {
+			> td {
+				color: #333;
+				vertical-align: middle;
+			}
 		}
 	}
 
-	td {
-		color: #bbb;
+	&.main {
+	
+		th {
+			color: #aaa;
+		}
+
+		tr.unavaible {
+			a {
+				color: $color-unavaible;
+			}
+		}
+
+		tr.bg-danger {
+			background-color: lighten($brand-danger, 20%);
+		}
+
+		td.major {
+			font-weight: bold;
+			font-size: 100%;
+		}
+
+		td.minor {
+			font-weight: normal;
+			font-size: 75%;
+			color: #666;
+		}
+
+		td {
+			.info {
+				font-weight: normal;
+				font-size: 80%;
+
+				p {
+					margin: 0px;
+				}
+
+				strong {
+					font-weight: bold;
+				}
+			}
+		}
 	}
 
-	td.major {
-		font-weight: bold;
-		font-size: 110%;
-	}
+	&.kurser {
+		.bocker {
+			width: 30%;
 
-	td.minor {
-		font-weight: normal;
-		font-size: 70%;
+			em {
+				color: $gray-light;
+			}
+		}
 	}
 }

@@ -1,0 +1,53 @@
+@charset "utf-8";
+
+@import "laromedel_print_preview";
+
+@media print {
+
+	.utskrift-data {
+		page-break-after:always;
+		margin: 0px;
+		border: none;
+
+		th {
+			font-size: 85%;
+		}
+
+		td {
+			font-size: 70%;
+		}
+
+		td.minor {
+			font-size: 50%;
+		}
+
+		td.titel {
+			width: 40%;
+		}
+
+		header {
+			margin-bottom: 1.5cm;
+
+			.print-logo {
+				position: absolute;
+				right: 0px;
+				top: 0px;
+				height: 2cm;
+			}
+		}
+	}
+
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+}

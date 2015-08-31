@@ -5,7 +5,7 @@ require_once("config.php");
 mysqli_report(MYSQLI_REPORT_STRICT);
 
 try {
-	CONFIG::$DB_LINK  = new mysqli(Config::DB_HOST, Config::DB_USER, Config::DB_PASS, Config::DB_NAME);
+	CONFIG::$DB_LINK  = new mysqli(Config_DB::DB_HOST, Config_DB::DB_USER, Config_DB::DB_PASS, Config_DB::DB_NAME);
 
 	mysqli_query(CONFIG::$DB_LINK, 'SET character_set_results=utf8');
 	mysqli_query(CONFIG::$DB_LINK, 'SET names=utf8');

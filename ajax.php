@@ -37,6 +37,80 @@ if(isset($_GET[Config::PARAM_AJAX])){
 		case "getLoginHTML":
 			include("admin/ajax_login.php");
 			break;
+		
+		case "get-kurser-pagelist":
+			include "page_functions.php";
+			if(isset($_GET[Config::PARAM_ID])){ // terminId
+				$_SESSION["active-termin"] = $_GET[Config::PARAM_ID];
+				print getKurserPageList();
+			} else {
+				printAjaxError("Termin-id saknas för anrop till kurslista.");
+			}
+			break;
+		
+		case "get-bocker-pagelist-urval":
+			include "page_functions.php";
+			if(isset($_GET[Config::PARAM_ID])){ // urvals-bokstav
+				$_SESSION["bok-urval"] = $_GET[Config::PARAM_ID];
+				print getBockerPageList();
+			} else {
+				printAjaxError("Urval saknas för anrop till läromedelslista.");
+			}
+			break;
+		
+		case "get-bocker-pagelist-termin":
+			include "page_functions.php";
+			if(isset($_GET[Config::PARAM_ID])){ // terminId
+				$_SESSION["bok-termin"] = $_GET[Config::PARAM_ID];
+				print getBockerPageList();
+			} else {
+				printAjaxError("Urval saknas för anrop till läromedelslista.");
+			}
+			break;
+		
+		case "get-bokningar-pagelist":
+			include "page_functions.php";
+			if(isset($_GET[Config::PARAM_ID])){ // terminId
+				$_SESSION["active-termin"] = $_GET[Config::PARAM_ID];
+				print getBokningarPageList();
+			} else {
+				printAjaxError("Urval saknas för anrop till bokningslista.");
+			}
+			break;
+		case "get-bokningar-boklist":
+			include "page_functions.php";
+			if(isset($_GET[Config::PARAM_ID])&&isset($_GET[Config::PARAM_REF_ID])){ // terminId & bokId
+					$_SESSION["active-termin"] = $_GET[Config::PARAM_ID];
+					print getBokningarPageList($_GET[Config::PARAM_REF_ID], "");
+			} else {
+				printAjaxError("Urval saknas för anrop till bokningslista i bokvisning.");
+			}
+			break;
+		case "get-bokningar-bokarelist":
+			include "page_functions.php";
+			if(isset($_GET[Config::PARAM_ID])){ // terminId & bokId
+				$_SESSION["bokning-bokare"] = $_GET[Config::PARAM_ID];
+				print getBokningarPageList();
+			} else {
+				printAjaxError("Urval saknas för anrop till bokningslista för bokare.");
+			}
+			break;
+		case "update-termin-time":
+			include "class_kurs.php";
+			if(isset($_GET[Config::PARAM_ID])&&isset($_GET["start"])&&isset($_GET["slut"])){ // terminId & bokId
+					$kurs = new Kurs();
+					$kurs->setFromId($_GET[Config::PARAM_ID]);
+					$kurs->startTermin_id = $_GET["start"];
+					$kurs->slutTermin_id = $_GET["slut"];
+					$kurs->save();
+			} else {
+				printAjaxError("Värden saknas för uppdatering av terminer för kurs");
+			}
+			break;
+
+		default:
+			printAjaxError("En okänd parameter användes.");
+
 	}
 
 
@@ -48,8 +122,8 @@ if(isset($_GET[Config::PARAM_AJAX])){
 
 // functions
 
-function printAjaxError($titel, $msg){
-	print "<div class=\"alert alert-danger\"><strong>$titel</strong> $msg</div>";
+function printAjaxError($msg){
+	print "<div class=\"alert alert-danger\"><div><strong>Fel i AJAX-anrop</strong></div><div>$msg</div></div>";
 }
 ?>
 

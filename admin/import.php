@@ -22,7 +22,8 @@ if(isset($_GET["upload"])){
 		
 		$filesSucces = true;
 		importLog("<h3>Läser in Elev-rapport</h3>");
-		if(!$importfil_elever = getFile("rapport-elever")){
+		$importfil_elever = getFile("rapport-elever");
+		if($importfil_elever == false){
 			$filesSucces = false;
 		} else {
 			importLog("<p>Elev-rapport inläst utan problem</p>");
@@ -49,6 +50,10 @@ if(isset($_GET["upload"])){
 			$lasarObj = new Lasar(2015);
 
 			importLog("<h3>Raderar gammal import-data..</h3>");
+			mysqli_query(Config::$DB_LINK, "DELETE FROM ".Kurs::TABLE_KURS_ELEVER);
+			mysqli_query(Config::$DB_LINK, "DELETE FROM ".Kurs::TABLE_KURS_LARARE);
+			mysqli_query(Config::$DB_LINK, "DELETE FROM ".Klass::TABLE);
+			mysqli_query(Config::$DB_LINK, "DELETE FROM ".Elev::TABLE);
 	  		// TODO ARKIVERA ISTÄLLET
 	  		//importLog(EMPTY_ALL_IMPORT_DATA_TABLES());
 			
@@ -95,8 +100,8 @@ if(isset($_GET["upload"])){
 <form method="post" action="?<?php print Config::PARAM_NAV."=admin-import&upload=1" ?>" enctype="multipart/form-data">
 	<fieldset><legend>Import av grundadata</legend>
     	<p>OBS! Inläsning börjar på rad 2 (första innehåller kolumnrubriker)</p>
-    	<label>CSV-fil för <strong>Elev-rapport:</strong> <input type="file" name="rapport-elever" /></label><br />
-    	<label>CSV-fil för <strong>Grupp-rapport:</strong> <input type="file" name="rapport-grupper" /></label><br />
+    	<label>CSV-fil för <strong>Elev-rapport:</strong> <input type="file" name="rapport-elever" accept=".txt,.csv"/></label><br />
+    	<label>CSV-fil för <strong>Grupp-rapport:</strong> <input type="file" name="rapport-grupper" accept=".txt,.csv"/></label><br />
     </fieldset>
 
     <input type="submit" name="upload" value="Ladda upp"/>

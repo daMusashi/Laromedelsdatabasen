@@ -82,7 +82,7 @@ foreach ($NAV as $key => $item) {
 print "<nav  class=\"navbar navbar-default navbar-fixed-top\" id=\"nav-main\" role=\"navigation\">";
 
 print "<div class=\"branding\"><div  class=\"container\">";
-print "<h1>".Config::TITEL." <span class=\"version\">(v.".Config::VERSION.")</span></h1>";
+print "<h1>".TEXT::TITEL." <span class=\"version\">(v.".Config::VERSION.")</span></h1>";
 print "</div></div>";
 
 print "<div  class=\"container\">";
@@ -92,18 +92,25 @@ print "<ul class=\"nav navbar-nav navbar-left\" role=\"menu\">";
 printMenu($menu["main"]);
 print "</ul>";
 
-if(count($menu["admin"]) > 0){
-	print "<div class=\"nav navbar-nav navbar-right\">";
-		print "<div class=\"dropdown\">";
+
+print "<ul class=\"nav navbar-nav navbar-right\">";
+	if(count($menu["admin"]) > 0){
+		print "<li class=\"dropdown\">";
 			print "<a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" role=\"button\" aria-expanded=\"false\">Administratör <span class=\"caret\"></span></a>";
 			print "<ul class=\"dropdown-menu\" role=\"menu\">";
 				printMenu($menu["admin"]);
 			print "</ul>";
-		print "</div>";
-	print "</div>";
-}
-print getNavLoginHTML();
+		print "</li>";
+	}
+	print "<li>";
+		print getNavLoginHTML();
+	print "</li>";
+print "</ul>";
+
+
 print "</div></nav>";
+
+
 
 function getNavLoginHTML(){
 	if(isLoggedin()){
@@ -114,7 +121,7 @@ function getNavLoginHTML(){
 }
 
 function _getNavlogoutHTML(){
-	return "<p class=\"navbar-text navbar-right\">Du är inloggad som ".getCurrentRightsLabel()." - <a href=\"#\" onclick=\"logout();\">Logga ut</a></p>";
+	return "<p class=\"navbar-text navbar-right\">Du är inloggad med <strong>rollen ".getCurrentRightsLabel()."</strong> - <a href=\"#\" onclick=\"logout();\">Logga ut</a></p>";
 }
 function _getNavLoginHTML(){
 	return "<button type=\"button\" class=\"btn btn-success navbar-btn navbar-right\" data-toggle=\"modal\" data-target=\"#loginModal\">Logga in</button>";

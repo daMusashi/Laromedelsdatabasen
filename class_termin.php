@@ -1,4 +1,5 @@
 <?php
+	require_once("config.php");
 	require_once("class_lasar.php");
 	require_once("class_kurs.php");
 
@@ -56,19 +57,37 @@ Class Termin {
 
     	$tv = "0";
     	$tDesc = "HÖST";
-    	$tillfalleText = " höstterminen ";
+    	$tillfalleText = "HÖST-terminens";
 
     	if($this->terminTyp == "vt"){ 
     		$tv = "1";
     		$tDesc = "VÅR";
-    		$tillfalleText = " vårterminen ";
+    		$tillfalleText = "VÅR-terminens";
     	}
     	
     	$this->value = (int)$this->lasar->value.$tv;
     	$this->desc = $this->lasar->descShort.":".$tDesc;
-    	$this->descLong = $this->lasar->desc." - ".$tDesc;
-    	$this->hamtasDesc = "START".$tillfalleText.$this->lasar->descShort;
-    	$this->lamnasDesc = "SLUT".$tillfalleText.$this->lasar->descShort;
+    	$this->descLong = $this->lasar->descLong." - ".$tDesc;
+    	$this->hamtasDesc = $tillfalleText." START ".$this->lasar->descShort;
+    	$this->lamnasDesc = $tillfalleText." SLUT ".$this->lasar->descShort;
+    }
+
+    public function getNextTermin(){
+    	if($this->terminTyp == "vt"){
+    		$nextLasar = $this->lasar->getLasarAfterThis();
+    		return $nextLasar->getFirstTermin();
+    	} else {
+    		return $this->lasar->getLastTermin();
+    	}
+    }
+
+    public function isInCurrentLasar(){
+    	$currentLasar = Lasar::getCurrentLasar();
+    	if($this->lasar->value == $currentLasar->value){
+    		return true;
+    	} else {
+    		return false;
+    	}
     }
 
     public static function getAll(){
@@ -90,85 +109,24 @@ Class Termin {
 		return $terminer;
     }
 
-    public static function _getTerminNavHTML($nav_value, $typClass, $activeTidId, $isLasar = false){
-
-		$terminer = self::getAll();
-
-		$lasar = [];
-
-		$html = "<ul class=\"$typClass\">";
-		foreach($terminer as $termin){
-			
-			$id = $termin->id;
-			$desc = $termin->desc;
-
-			if(!array_key_exists($id, $lasar)){
-				if($isLasar){
-					$id = $termin->lasar->id;
-					$desc = $termin->lasar->desc;
-				}
-
-				$active = "";
-				if($id == $activeTidId){
-					$active = " class=\"active\"";
-				}
-
-				$a = "<a href=\"?".Config::PARAM_NAV."=$nav_value&".Config::PARAM_ID."=".$id."\">".$desc."</a>";
-				$lasar[$id] = "<li role=\"presentation\"$active>$a</li>";
-				//print "<p>$a</p>";
-			}
-		}
-
-		ksort($lasar);
-
-		foreach($lasar as $nav){
-			$html .=  $nav;
-		}
-
-		$html .=  "</ul>";
-
-		return $html;
-    }
-
-    public static function getTabsHTML($nav_value, $activeTidId){
-    	return self::_getTerminNavHTML($nav_value, "nav nav-tabs", $activeTidId);
-    }
-
-    public static function _obselute_getTerminSelectHTML($nav_value, $activeTidId){
-    	$html = "<div class=\"navbar-form navbar-right\">
-    		<button class=\"btn dropdown-toggle\" type=\"button\" id=\"dropdownTerminer\" data-toggle=\"dropdown\" aria-expanded=\"true\">
-    			Byt termin <span class=\"caret\"></span>
-  			</button>
-    	";
-    	$html .= self::_getTerminNavHTML($nav_value, "dropdown-menu", $activeTidId, false);
-    	$html .= "</div>";
-
-    	return $html;
-    }
-
-    public static function getTerminSelectWidget($nav_value, $terminObj){
-    	$html = "<button class=\"btn btn-primary\" type=\"button\" id=\"dropdownTerminer\" data-toggle=\"dropdown\" aria-expanded=\"true\">
-    			<span>".$terminObj->descLong."</span>
-    			<span class=\"glyphicon glyphicon-chevron-down\"></span>
-  			</button>
-    	";
-    	$html .= self::_getTerminNavHTML($nav_value, "dropdown-menu", $terminObj->id, false);
-
-    	return $html;
-    }
-
-    public static function getCurrentTermin(){
+    public static function getCurrentTermin($modifier = 0){
 		$t = date_create();
 		$startYear = date_format($t,"Y");
 		$w = date_format($t,"W");
 		$terminTyp = "ht";
 		
-		if($w < 26){
+		if($w < 32){
 			$startYear--;
-			$terminId = "vt";
+			$terminTyp = "vt";
 		}
 		
 		return new Termin($startYear, $terminTyp);
+	}
+
+	public static function getCurrentTerminId($modifier = 0){
+		$termin = getCurrentTermin($modifier);
+		
+		return $termin->id;
 	}
 
 }

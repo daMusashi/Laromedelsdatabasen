@@ -1,13 +1,15 @@
 <?php
-	require_once("class_kurs.php");
-	require_once("class_bok.php");
-	require_once("class_larare.php");
+	
 	require_once("class_html_factory.php");
 	require_once("class_lasar.php");
+	require_once("page_functions_navs.php");
 
 ?>
+
 <div class="page-header">
-	<h1>Kurser</h1>
+	<h1>Kurser <button id="main-help" type="button" class="btn btn-primary btn-xs" aria-label="Left Align">
+  <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span> Hjälp
+</button></h1>
 </div>
 
 <div class="info-box">
@@ -16,95 +18,42 @@
 
 <?php
 
-if(isset($_GET[Config::PARAM_ID])){
+/*if(isset($_GET[Config::PARAM_ID])){
 	$activeLasar = new Lasar();
 	$activeLasar->setFromId($_GET[Config::PARAM_ID]);
 } else {
-	if(Config::SIMPLE_MODE){
-		$activeLasar = Lasar::getCurrentLasar(1);
-	} else {
-		$activeLasar = Lasar::getCurrentLasar();
-	}
-}
+	$activeLasar = Lasar::getCurrentLasar();
+}*/
 
-if(!Config::SIMPLE_MODE){
-	print Lasar::getTabsHTML("kurser", $activeLasar->id, true);
-}
+$activeTermin = new Termin();
+$activeTermin->setFromId($_SESSION["active-termin"]);
 
-$Selectedkurser = Kurs::getAllForTermin($activeLasar->getFirstTerminId(), true);
+print getTabsAjaxHTML("kurser-lasar-tab", "kurser", $activeTermin->id, "get-kurser-pagelist", "ajax-list-container", true);
+
+
+//$Selectedkurser = Kurs::getAllForTermin($activeLasar->getFirstTerminId(), true);
 
 
 ?>
+<div id="ajax-list-container" class="well">
 
-<table class="table main<?php if(isLoggedin()){ print " table-hover";} ?> table-striped kurser"><thead>
-<tr class="info">
-<th>&nbsp;</th>
-<th>Namn</th>
-<?php if(!Config::SIMPLE_MODE){ ?>
-<th>Antal <br />elever</th>
-<?php } ?>
-<th>Start</th>
-<th>Slut</th>
-<th>Lärare</th>
-<th>Bokade böcker</th>
-</tr></thead><tbody>
+</div>
+
+<?php include "include_changetermin_modal.php" ?>
+
+<script>
+$(document).ready(function(){
+	$('#ajax-list-container').html('<?php print Config::LOADING_HTML; ?>');
+	$.get('ajax.php?<?php print Config::PARAM_AJAX; ?>=get-kurser-pagelist&<?php print Config::PARAM_ID; ?>=<?php print $_SESSION["active-termin"]; ?>', function(data){
+		$('#ajax-list-container').html(data);
+	});
+
+});
+</script>
+
+
+
 <?php
-
-$rowIndex = 0;
-$bokIndex = 0;
-
-foreach($Selectedkurser as $kurs){
-	
-	print "<tr>";
-	
-	print "<td>";
-	if(isLoggedin()){
-		print HTML_FACTORY::getBokaKnappHTML("sm", "kurs", $kurs->id, "Boka en bok för kursen");
-	}
-	print "</td>";
-	
-	print "<td class=\"major\">" . $kurs->id . "</td>";
-	
-	if(!Config::SIMPLE_MODE){
-		print "<td class=\"minor\">" .  Kurs::getAntalElever($kurs->id) . "</td>";
-	}
-
-	print "<td class=\"minor\">" .  $kurs->startTermin->desc. "</td>";
-	print "<td class=\"minor\">" .  $kurs->slutTermin->desc. "</td>";
-
-	
-	$lararStr = "";
-	$lararList = Kurs::getLarare($kurs->id);
-	if(count($lararList) > 0){
-		foreach($lararList as $larare){
-			$lararStr = $lararStr . $larare->id . "<br />";
-		}
-	} else {
-		$lararStr = "Ingen lärare<br />knuten till kursen än";
-	}
-	print "<td class=\"minor\">$lararStr</td>";
-	
-	print "<td>";
-	if(isLoggedIn()){
-		$bokList = Kurs::getBocker($kurs->id);
-		if(count($bokList) > 0){
-			print "<div>";
-			foreach($bokList as $bok){		
-				HTML_FACTORY::getBokTdInfoSnippet($bokIndex, $bok);
-				$bokIndex++;	
-			}
-			print "</div>";
-		} else {
-			print "<em>Inga bokningar än</em>";
-		}
-	} else {
-		print "Logga in för info";
-	}
-	print "</td>";
-	
-	print "</tr>";
-	$rowIndex++;
-}
-
+	include("include_help_text_kurser.php");
+	include("include_help_modals.php");
 ?>
-</tbody></table>

@@ -12,7 +12,7 @@ $baseuRL = "?".Config::PARAM_NAV."=admin-backup&".Config::PARAM_ID."=";
 ?>
 <h1>Backup</h1>
 <p><a href="<?php print $baseuRL."allt" ?>">Gör backup på <strong>allt</strong></a></p>
-<p><a href="<?php print $$baseuRL."bocker" ?>">Gör backup på endast<strong>böcker</strong></a></p>
+<p><a href="<?php print $baseuRL."bocker" ?>">Gör backup på endast<strong>böcker</strong></a></p>
 <p><a href="<?php print $baseuRL."bokningar" ?>">Gör backup på endast<strong>bokningar</strong></a></p>
 <?php
 
@@ -28,7 +28,7 @@ if($mode){
 			break;
 		case "bokningar":
 			print "<h2>Endast bokningar</h2>";
-			backup_tables('kurser_bocker');
+			backup_tables('bokningar');
 			break;
 	}
 	

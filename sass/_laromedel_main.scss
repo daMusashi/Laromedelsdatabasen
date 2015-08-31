@@ -1,0 +1,46 @@
+html {
+  overflow-y: scroll;
+}
+
+header.site-header {
+		
+	.branding {
+		background-color: #444;
+		color: #eee;
+
+		h1 {
+			font-size: 140%;
+			margin: 0px;
+			margin-top: 3px;
+			margin-bottom: 3px;
+
+			.version {
+				font-size: 50%;
+				color: #aaa;
+			}
+		}
+	}
+
+}
+
+#main {
+	padding-top: 80px;
+
+}
+
+footer {
+	text-align: right;
+	margin-top: 20px;
+	padding-top: 5px;
+	border-top-style: solid;
+	border-top-color: #aaa;
+	border-top-width: 1px;
+	color: #aaa;
+	font-size: 70%;
+}
+
+.alert {
+	h3 {
+		margin: 0px;
+	}
+}

@@ -4,6 +4,7 @@
 	require_once("class_larare.php");
 	require_once("class_elev.php");
 	require_once("class_termin.php");
+	require_once("page_functions_navs.php");
 	//require_once("class_tillfalle.php");
 	
 	class Kurs extends Dataobject
@@ -50,7 +51,9 @@
 		$kurserSelectArr = [];
 
 		foreach($kurser as $kurs){
-			$kurserSelectArr[$kurs->id] = $kurs->id;
+			if(!$kurs->isOld()){
+				$kurserSelectArr[$kurs->id] = $kurs->id;
+			}
 		}
 
 		return HTML_FACTORY::getAssocArrayAsSelectHTML($kurserSelectArr, $elementId, "Välj en kurs...", "Kurs", $fieldDescription, $selectedId, "300", $elementId);
@@ -58,7 +61,7 @@
 
 	public static function getAll($where = NULL, $idsOnly = false, $inkluderaArkiverade = false){
 		
-		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_STARTTERMIN.",".self::FN_ID, $inkluderaArkiverade);
+		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_STARTTERMIN.",".self::FN_ID, true, $inkluderaArkiverade);
 		//$list = array(new Kurs(self::OSPEC_ID));
 		$list = [];
 
@@ -111,29 +114,51 @@
 			//print "</p>";
 		}
 
+		//print "<p>".count($list)."</p>";
+		//print var_dump($list[0]);
+
 		return $list;
 	}
 
+	public static function getAllForLasar($lasarId, $onlyIds = false){
+		$lasar = new Lasar();
+		$lasar->setFromId($lasarId);
+
+		return Kurs::_getAllForTermin($lasar->getFirstTerminId(), true, $onlyIds);
+	}
+
 	public static function getAllForTermin($terminId, $forLasar = false){
-		return self::_getAllForTermin($terminId, $forLasar, false);
+		return Kurs::_getAllForTermin($terminId, $forLasar, false);
 	}
 
 	public static function getAllIdsForTermin($terminId, $forLasar = false){
-		return self::_getAllForTermin($terminId, $forLasar, true);
+		return Kurs::_getAllForTermin($terminId, $forLasar, true);
 	}
 
-	public static function getAllAsSelectAssoc($where = NULL, $inkluderaArkiverade = false){
+	public static function getAllAsSelectAssoc($where = NULL, $baraBokade = false, $inkluderaArkiverade = false){
 		
 		$list = [];
 		//$list[self::OSPEC_ID] = self::OSPEC_DESC;
-		foreach(self::getAll($where) as $kurs){
-			$list[$kurs->id] = $kurs->id;
+		foreach(Kurs::getAll($where) as $kurs){
+			if(!$kurs->isOld()){
+				if($baraBokade){
+					if(Bokning::kursExists($kurs->id)){
+						$list[$kurs->id] = $kurs->id;
+					}
+				} else {
+					$list[$kurs->id] = $kurs->id;
+				}
+			}
 		}
+
+		ksort($list);
 		
 		return $list;
 	}
 
 	public static function importSave($id, $period, $lasarObj){ 
+
+		$id = utf8_encode($id);
 
 		if(!self::_rowExist(self::TABLE, self::FN_ID, $id, true)){
 
@@ -158,43 +183,52 @@
 
 			self::_save(self::TABLE, $id, $dataArr, true, false);
 
-			return "Kurs med id $id IMPORTERAD";
+			return true;
 		} else {
-			return "Kurs med id $id finns redan. INTE importerad.";
+			throw new Exception("INGEN import skedde. Kursen finns redan");
+			return false;
 		}
 
 	}
 
 	public static function importSaveAddElever($kursId, $elevIdArr){
+		$kursId = utf8_encode($kursId);
+
+		print "<p>importSaveAddElever antal elever att lägga till: ".count($elevIdArr)."</p>";
 		foreach($elevIdArr as $elevId){
 			// ska inte behöva kolla om relation existerar då datan kommer från annan db där dubletter av detta slag inte ska kunna finnas
 			if($elevId != "" && $elevId != " "){
 				
-				$dataArr[self::FK_ID] = "'" . $kursId . "'";
+				$dataArr[Kurs::FK_ID] = "'" . $kursId. "'";
 				$dataArr[Elev::FK_ID] = "'" . $elevId . "'";
 
-				self::_save(self::TABLE_KURS_ELEVER, null, $dataArr, true, false);
+				print "<p>importSaveAddElever lägger till elev ".$elevId."</p>";
 
-				return "Elev [$elevId] KNUTEN till kurs $kursId";
+				self::_save(Kurs::TABLE_KURS_ELEVER, "HACK_BEHÖVS_EJ_HÄR", $dataArr, true, false);
+
 			} else {
-				return "Felaktigt elev-id [$elevId]. INTE knuten till kurs $kursId";
+				//throw new Exception("Felaktigt elev-id [$elevId]. INTE knuten till kurs $kursId");
 			}
 		} 
 	}
 
 	public static function importSaveAddlarare($kursId, $lararId){
 
+		$kursId = utf8_encode($kursId);
+		$lararId = utf8_encode($lararId);
+
 		// ska inte behöva kolla om relation existerar då datan kommer från annan db där dubletter av detta slag inte ska kunna finnas
 		if($lararId != "" && $lararId != " "){
 			
-			$dataArr[self::FK_ID] = "'" . $kursId . "'";
+			$dataArr[Kurs::FK_ID] = "'" . $kursId . "'";
 			$dataArr[Larare::FK_ID] = "'" . $lararId . "'";
 
-			self::_save(self::TABLE_KURS_LARARE, null, $dataArr, true, false);
+			self::_save(Kurs::TABLE_KURS_LARARE, "HACK_BEHÖVS_EJ_HÄR", $dataArr, true, false);
 
-			return "Larare [$lararId] KNUTEN till kurs $kursId";
+			return true;
 		} else {
-			return "Felaktigt larar-id [$lararId]. INTE knuten till kurs $kursId";
+			throw new Exception("Felaktigt lärar-id [$lararId]. INTE knuten till kurs $kursId");
+			return false;
 		}
 
 	}
@@ -282,6 +316,7 @@
 			// 
 		}
 		if(isset($kursAccFieldArray)){
+			//var_dump($kursAccFieldArray);
 			//$this->id = $kursAccFieldArray[self::PK_ID];
 			$this->id = $kursAccFieldArray[self::FN_ID];
 			$this->arkiverad = $kursAccFieldArray[self::FN_ARKIVERAD];
@@ -323,6 +358,28 @@
 
 	}
 
+	// Om kursen är äldre än aktuell termin
+	public function isOld(){
+		$currentTermin = Termin::getCurrentTermin();
+		//print "<p>this: ".$this->slutTermin->value."(".$this->slutTermin->id."), current: ".$currentTermin->value."(".$currentTermin->id.")</p>";
+		if($this->slutTermin->value < $currentTermin->value){
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public function arkiveraIfOld(){
+		if($this->isOld()){
+			$this->arkiverad = true;
+			$this->save();
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+
 	public function isValid(){
 		$valid = true;
 
@@ -335,6 +392,44 @@
 
 	private function meExtists(){
 		return self::_rowExist(self::TABLE, self::FN_ID, $this->id, true);
+	}
+
+	/* TD-snippet som expanderar vid vidare val i tabell i lista */
+	public static function getTdInfoSnippet($index, $kursObj, $startTerminId, $slutTerminId){
+		
+
+		$collapseHTML = "";
+		$collapseId = "kurs-info-$index";
+
+
+
+		if(isAdmin()){
+			
+			
+			$collapseHTML .= "<div class=\"collapse info kurs-info\" id=\"$collapseId\">";
+			$collapseHTML .= "<p>Kursens start/slut bestämmer bokningens start/slut</p>";
+			
+			$collapseHTML .= "<div class=\"btn-group btn-group-sm\" role=\"group\">";
+			//$collapseHTML .= getTerminSelectWidget("kurs-termin-select", "null", $startTerminId, true, "set-kurs-start-termin", null, $kursObj->id);
+			//$collapseHTML .= getTerminSelectWidget("kurs-termin-select", "null", $slutTerminId, true, "set-kurs-start-termin", null, $kursObj->id);
+			$collapseHTML .= "<button data-kursid=\"".$kursObj->id."\" data-startid=\"".$startTerminId."\" data-slutid=\"".$slutTerminId."\" class=\"btn btn-primary\" type=\"button\">Ändra kursens start/slut</button>";
+			$collapseHTML .= "</div></div>";
+		} 
+	
+
+		$html = "<div class=\"kurs-titel\">";		
+		if(isAdmin()){
+			$html .= "<a data-toggle=\"collapse\" href=\"#$collapseId\" aria-expanded=\"false\" aria-controls=\"$collapseId\" class=\"titel-link collapsed\">";
+				$html .= "<strong>" . $kursObj->id . "</strong>";
+			$html .= "</a>";
+		} else {
+			$html .= "<strong>" . $kursObj->id . "</strong>";
+		}
+		$html .= "</div>";
+		$html .= $collapseHTML;
+
+		return $html;
+
 	}
 
   

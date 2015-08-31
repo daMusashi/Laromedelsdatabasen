@@ -5,28 +5,29 @@ error_reporting(E_ALL); // E_ERROR / E_ALL
 
 setlocale(LC_ALL,"SV");
 
+require_once("class_termin.php");
+
+if(!isset($_SESSION["active-termin"])){ 
+	$activeTermin = Termin::getCurrentTermin();
+	$_SESSION["active-termin"] = $activeTermin->id;
+}
+if(!isset($_SESSION["bok-termin"])){ // för tillgänglighet
+	$activeTermin = Termin::getCurrentTermin();
+	$_SESSION["bok-termin"] = $activeTermin->id;
+}
+if(!isset($_SESSION["bokning-bokare"])){ // för tillgänglighet
+	$_SESSION["bokning-bokare"] = "*";
+}
+
 final class CONFIG {
 	
-	const TITEL = "Älvkullens läromedelsbokning"; // med avslutande "/" (om inte tom, då bara "")
-	const VERSION = "2.01 beta 5"; // med avslutande "/" (om inte tom, då bara "")
+	const VERSION = "2.6"; // med avslutande "/" (om inte tom, då bara "")
 	const DEBUG = true; // om visa debug-prylar
 
 	const SIMPLE_MODE = false; // Visar bara det viktigaste - såsom bokning - när inte all data är klar
 	// se publics nedan för NAVs i simple mode
 	
 	const BASE_URL = "/laromedel/"; // med avslutande "/" (om inte tom, då bara "")
-
-	// lampan
-	// const DB_HOST = "localhost";
-	// const DB_NAME = "laromedel";
-	//const DB_USER = "laromedel";
-	//const DB_PASS = "arkimedes";
-	
-	// labs.mn.se
-	const DB_HOST = "mysql384.loopia.se";
-	const DB_NAME = "martinnilsson_se_db_4";
-	const DB_USER = "laromedel@m80331";
-	const DB_PASS = "laromedelarkimedes";
 
 	const DB_BACKUP_PATH = "backups";
 
@@ -35,8 +36,8 @@ final class CONFIG {
 	const PARAM_REF_TYP = "ref";
 	const PARAM_REF_ID = "refid";
 	const PARAM_AJAX = "x";
-	const PARAM_DEFAULT_NAV = "kurser";
-	const PARAM_DEFAULT_NAV_SIMPLE_MODE = "kurser";
+	const PARAM_DEFAULT_NAV = "bocker";
+	const PARAM_DEFAULT_NAV_SIMPLE_MODE = "bocker";
 
 	const TILLFALLEN_START_YEAR = 2014; // vilket start-år för presentation och filtrering av av tillfällen
 	const TILLFALLEN_END_YEAR = 2017; // vilket start-år för presentation och filtrering av av tillfällen
@@ -52,6 +53,10 @@ final class CONFIG {
 
 	const BOK_INSTOCK_WARNING = 20; // antalet böcker kvar som generar varnings-färg
 
+	const NULL = "null"; // används som null-värde främst i forms
+
+	const LOADING_HTML = "<div class=\"loading-wrapper\"><span class=\"text\">Laddar</span><div class=\"loading\"><div></div><div></div><div></div><div></div><div></div></div></div>";
+
 	public static $DB_LINK = null;
 	public static $DB_SUCCESS = true;
 	public static $DB_ERROR = "";
@@ -60,9 +65,10 @@ final class CONFIG {
 
 }
 
-
+require_once("config_db.php");
 require_once("config_nav.php");
 require_once("config_import.php");
+require_once("config_texter.php");
 
 //$_SESSION["isDev"] = true;
 //$_SESSION["isAdmin"] = true;

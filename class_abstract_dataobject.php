@@ -16,7 +16,6 @@
 			$compiledOrderBy = self::getCompiledOrderBy($orderByField);
 						
 			$q = "SELECT * FROM ".$table." ".$compiledWhere.$compiledOrderBy;
-			//print "<p>$q</p>";
 		
 			$result = mysqli_query(CONFIG::$DB_LINK, $q);
 			
@@ -97,6 +96,17 @@
 
 		}
 
+		public static function _delete($table, $where){
+			$q = "DELETE FROM bocker WHERE ".self::FN_ID." = '" . $this->iid. "'";
+			
+			$ret = mysqli_query(Config::$DB_LINK, $q);
+			if (empty($ret)){
+				throw new Exception("Något gick vid fel vid <strong>redering</strong>.
+					<br>Query: $q
+					<br>DB Error: ".mysqli_connect_error(Config::$DB_LINK));
+			} 
+		}
+
 		public static function _propToString($prop){
 			if(!isset($prop)){
 				return "INTE SATT!";
@@ -153,15 +163,18 @@
 			
 			$where = "";
 			
+		
 			if($isArkivbar){
-				$arkiverad_where = self::FN_ARKIVERAD." = false";
+				$arkiverad_where = self::FN_ARKIVERAD." = 0";
 			
 				if($inkluderaArkiverade){
-					$arkiverad_where = $arkiverad_where . " OR arkiverad = true";
+					$arkiverad_where = $arkiverad_where . " OR arkiverad = 1";
 				}
 				
 				if($bifogadWhere){
 					$where = " WHERE " . $bifogadWhere . " AND (" . $arkiverad_where . ")";
+				} else {
+					$where = " WHERE " . $arkiverad_where;
 				}
 				
 			} else {

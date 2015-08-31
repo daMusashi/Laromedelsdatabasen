@@ -1,117 +1,72 @@
 <?php
 	require_once("class_bok.php");
 	require_once("class_termin.php");
+	require_once("page_functions.php");
+	require_once("page_functions_navs.php");
+
+	if(!isset($_SESSION["bok-urval"])){
+		$_SESSION["bok-urval"] = "*";
+	}
+	$activeTermin = new Termin();
+	$activeTermin->setFromId($_SESSION["bok-termin"]);
 ?>
 
 <div class="page-header">
-	<h1>Böcker</h1>
+	<h1>Läromedel <button id="main-help" type="button" class="btn btn-primary btn-xs" aria-label="Left Align">
+  <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span> Hjälp
+</button></h1>
 </div>
 
 
 <?php
 
-	$infoContent = "<ul>
-						<li>Klicka på Boka-knappen vid en bok du vill boka för en kurs</li>
-						<li>Välj en bok för att se information och länk för detaljblad om boken</li>
-					</ul>";
-	if(isAdmin()){
-		$infoContent .= "<p><strong>Administratör</strong>: När en bok väljs får du även upp val för att radera och redigera boken</p>";
-	}
 
-	HTML_FACTORY::printPanel("info", "Så här gör du", $infoContent);
-
-	
-	if(isset($_GET[Config::PARAM_ID])){
+	/* if(isset($_GET[Config::PARAM_ID])){
 		$activeTermin = new Termin();
 		$activeTermin->setFromId($_GET[Config::PARAM_ID]);
 	} else {
 		$activeTermin = Termin::getCurrentTermin();
-	}
+	}*/
 
 	print "<nav class=\"navbar\" id=\"nav-bok\" role=\"navigation\">";
 	if(isAdmin()){
-		print HTML_FACTORY::getKnappHTML("bocker-add", "Lägg till en bok", "success", "Lägg till en ny bok");
+		print HTML_FACTORY::getKnappHTML("?".Config::PARAM_NAV."=bocker-add", "Lägg till ett läromedel", "success", "Lägg till ett nytt läromedel till databasen", "bottom");
 										
 	}
-	if(!Config::SIMPLE_MODE){
-		print "<div class=\"navbar-form navbar-right\">".Termin::getTerminSelectWidget("bocker", $activeTermin)."</div>";
-		print "<p class=\"navbar-text navbar-right\">Visar tillgänglighet för terminen</p>";
-	}
+
+	print "<div class=\"navbar-form navbar-right\">";
+		print getTerminSelectWidget("bocker-termin-select", "bocker", $activeTermin, true, "get-bocker-pagelist-termin", "ajax-list-container");
+	print "</div>";
+	print "<p class=\"navbar-text navbar-right\">Visar tillgänglighet för terminen</p>";
 	
 	print "</nav>";
-?>
 
-<table class="table main<?php if(isLoggedin()){ print " table-hover";} ?> table-striped bocker"><thead>
-<tr>
-<th>&nbsp;</th> <!-- boka-knapp -->
-<th>&nbsp;</th> <!-- titel -->
-<!-- <th>Författare</th> -->
-<th></th> <!-- tillgänglighet -->
-</tr></thead><tbody>
+	print getBockerAjaxCharTab("get-bocker-pagelist-urval", "ajax-list-container");
+?>
+<div id="ajax-list-container" class="well">
+
+</div>
+
+<?php include "include_delete_modal.php" ?>
+
+<script type="text/javascript">
+	function deleteMe(url, namn){
+		$('#validate-delete-modal-body').html("Bekräfta att du vill radera läromedlet <strong>"+namn+"</strong>");
+		$('#validate-delete-modal-confirm').click(function(e){
+			e.preventDefault();
+			window.location.href = url;
+		});
+		$('#validate-delete-modal').modal();
+	}
+	$(document).ready(function(){
+		$('#ajax-list-container').html('<?php print Config::LOADING_HTML; ?>');
+		$.get('ajax.php?<?php print Config::PARAM_AJAX; ?>=get-bocker-pagelist-urval&<?php print Config::PARAM_ID; ?>=<?php print $_SESSION["bok-urval"]; ?>', function(data){
+			$('#ajax-list-container').html(data);
+		});
+	});
+</script>
 
 <?php
-
-//$bocker = getBockerAsArray();
-$bocker = Bok::getAll();
-$index=0;
-
-foreach($bocker as $bok){
-	
-	$statusClass = "";
-
-	if(!Config::SIMPLE_MODE){
-		$antalObj = $bok->getAntalBokade($activeTermin->id);
-		
-		if($antalObj->bokbar){
-			$statusClass = "";
-			$buttonClass = "success";
-			if($antalObj->bokbara <= Config::BOK_INSTOCK_WARNING){
-				$buttonClass = "warning";
-			}	
-		} else {
-			$statusClass = "unavaible";
-			$buttonClass = "danger";	
-		}
-	}
-	print "<tr class=\"$statusClass\">";
-	
-	print "<td>";
-	if(Config::SIMPLE_MODE){
-		if(isLoggedin()){
-			print HTML_FACTORY::getBokaKnappHTML("sm", "bok", $bok->id, "Boka boken!");
-		}
-	} else {
-		if($antalObj->bokbar && isLoggedin()){
-			print HTML_FACTORY::getBokaKnappHTML("sm", "bok", $bok->id, "Boka boken!");
-		} 
-	}
-	print "</td>";
-	
-	print "<td class=\"major\">";
-		if(Config::SIMPLE_MODE){
-			print "".$bok->fullTitel."";
-		} else {
-			print HTML_FACTORY::getBokTdInfoSnippet($index, $bok, $antalObj);
-		}
-	print "</td>";
-
-	if(!Config::SIMPLE_MODE){
-		print "<td>";
-		if(isLoggedin()){
-			$bokningsLink = $bok->urlBoka;
-		} else {
-			$bokningsLink = "#";
-		}
-		print "<a href=\"".$bokningsLink."\" class=\"btn btn-$buttonClass btn-xs\">Tillgängliga ".$activeTermin->desc." <span class=\"badge\">$antalObj->bokbara</span></a> av ".$antalObj->antal;
-		print "</td>";
-	}
-
-	print "</tr>";
-
-	$index++;
-
-} 
-
+	include("include_help_text_bocker.php");
+	include("include_help_modals.php");
 ?>
-
-</tbody></table>

@@ -1,0 +1,23 @@
+.nav-tabs {
+	.active {
+		font-weight: bold;
+	}
+
+	&.welled {
+		border-bottom: none;
+
+		li.active {
+			a {
+				background-color: $well-bg;
+			}
+		}
+	}
+}
+
+#nav-main {
+	.navbar-nav {
+		a.active {
+			font-weight: bold;
+		}
+	}
+}

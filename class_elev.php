@@ -24,6 +24,7 @@
 		
 		// genererade props
 		public $namn = null;
+		public $klass = null;
 
    	/*
 		Statics
@@ -34,27 +35,28 @@
 		if(!self::_rowExist(self::TABLE, self::FN_ID, $personnummer, true)){
 
 			$dataArr[self::FN_ID] = "'" . $personnummer . "'";
-			$dataArr[self::FN_FORNAMN] = "'" . $fnamn . "'";
-			$dataArr[self::FN_EFTERNAMN] = "'" . $enamn . "'";
+			$dataArr[self::FN_FORNAMN] = "'" . utf8_encode($fnamn) . "'";
+			$dataArr[self::FN_EFTERNAMN] = "'" . utf8_encode($enamn) . "'";
 			$dataArr[self::FN_KLASSID] = "'" . $klassid . "'";
 
 			self::_save(self::TABLE, $personnummer, $dataArr, true, false);
 
-			return "Elev med id $personnummer IMPORTERAD";
+			return true;
 		} else {
-			return "Elev med id $personnummer finns redan. INTE importerad.";
+			throw new Exception("INGEN import skedde. Eleven finns redan");
+			return false;
 		}
 	}
 
 	public static function getAll($where = NULL){
 		
-		$result = self::_getAllAsResurs(self::TABLE, $where, self::DEFAULT_ORDER_BY, true);
+		$result = self::_getAllAsResurs(self::TABLE, $where, self::DEFAULT_ORDER_BY, false);
 
 		$list = array();
 		while($fieldArray = mysqli_fetch_assoc($result)){
-			$larare = new Larare();
-			$larare->setFromAssoc($fieldArray);
-			array_push($list, $larare);
+			$elev = new Elev();
+			$elev->setFromAssoc($fieldArray);
+			array_push($list, $elev);
 		}
 		
 		return $list;
@@ -63,12 +65,13 @@
 	public static function getAllAsSelectAssoc($where = NULL){
 		
 		$list = [];
-		foreach(self::getAll($where) as $larare){
-			$list[$larare->id] = $larare->namn;
+		foreach(self::getAll($where) as $elev){
+			$list[$elev->namn] = $elev->id;
 		}
 		
 		return $list;
 	}
+
 
 	public function setFromId($ElevId){
 		$q = "SELECT * FROM " . self::TABLE . " WHERE " . self::PK_ID . " = '" . $ElevId . "'";
@@ -84,18 +87,38 @@
 	}
 
 
-	public function setFromAssoc($elevAccFieldArray = NULL){
-		if($elevAccFieldArray){
-			$this->id = $larareAccFieldArray[self::FN_ID];
-			$this->fornamn = $larareAccFieldArray[self::FN_FORNAMN];
-			$this->efternamn = $larareAccFieldArray[self::FN_EFTERNAMN];
-			$this->klass_id = $larareAccFieldArray[self::FN_KLASSID];
+	public function setFromAssoc($fieldArray = NULL){
+		if($fieldArray){
+			$this->id = $fieldArray[self::FN_ID];
+			$this->fornamn = $fieldArray[self::FN_FORNAMN];
+			$this->efternamn = $fieldArray[self::FN_EFTERNAMN];
+			$this->klassid = $fieldArray[self::FN_KLASSID];
 			$this->generateProps();
 			
 			$this->isEmpty = false;
 		} else {
 			$this->isEmpty = true;
 		}
+	}
+
+	public static function getKurser($elevId, $onlyIds = false){
+		$q = "SELECT * FROM " . Kurs::TABLE_KURS_ELEVER . " WHERE " . self::FK_ID . " = '" . $elevId . "'";
+		
+		$result = mysqli_query(Config::$DB_LINK, $q);
+	
+		$list = [];
+
+		while($fieldArray = mysqli_fetch_assoc($result)){
+			if($onlyIds){
+				array_push($list, $fieldArray[Kurs::FK_ID]);
+			} else {
+				$kurs = new Kurs();
+				$kurs->setFromId($fieldArray[Kurs::FK_ID]);
+				array_push($list, $kurs);
+			}
+		}
+
+		return $list;
 	}
 	
    
@@ -124,5 +147,7 @@
 		} else {
 			$this->namn = $fn . $en;
 		}
+
+		$this->klass = $this->klassid;
 	}
 }

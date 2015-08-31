@@ -1,0 +1,27 @@
+form {
+	
+	.form-group {
+		.help-block {
+			font-size: 80%;
+			font-style: italic;
+		}
+	}
+
+	&.view {
+		.form-group {
+			label {
+				color: $gray-light;
+				font-weight: normal;
+				margin: 0px;
+			}
+
+			.form-control-static {
+				font-weight: bold;
+				font-size: 130%;
+				margin-top: 0px;
+			}
+
+			
+		}
+	}
+}

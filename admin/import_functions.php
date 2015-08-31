@@ -20,9 +20,13 @@ function parseElever($fileRowArray){
 		$klassId = $rowFields[$IMPORT["Rapporter"]["Elever"]["FieldIndex"]["Klass"]];
 		
 		try {
-			HTML_FACTORY::printInfoAlert("Klass-import", Klass::importSave($klassId));
+			if(Klass::importSave($klassId)){
+				HTML_FACTORY::printSuccessAlert("Klass-import", "Klassen $klassId importerades.");
+			} else {
+				HTML_FACTORY::printDangerAlert("Elev-import", "Okänt fel för klass $klassId");
+			}
 		} catch (Exception $e) {
-			HTML_FACTORY::printDangerAlert("Klass-import", $e->getMessage());
+			HTML_FACTORY::printWarningAlert("Elev-import", "Varning/fel för klass $klassId: ".$e->getMessage());
 		}
 		
 		// TOG BORT FÖR EN LÄRAR-IMPORT HÄR, som verkar förekomma i specialla fall
@@ -34,9 +38,14 @@ function parseElever($fileRowArray){
 		$elevFornamn = $rowFields[$IMPORT["Rapporter"]["Elever"]["FieldIndex"]["Fornamn"]];
 		
 		try {
-			HTML_FACTORY::printInfoAlert("Elev-import", Elev::importSave($elevId, $elevFornamn , $elevEfternamn, $klassId));
+			if(Elev::importSave($elevId, $elevFornamn , $elevEfternamn, $klassId)){
+				HTML_FACTORY::printSuccessAlert("Elev-import", "Elev $elevId importerades.");
+			} else {
+				HTML_FACTORY::printDangerAlert("Elev-import", "Okänt fel för elev $elevId");
+			}
+			
 		} catch (Exception $e) {
-			HTML_FACTORY::printDangerAlert("Elev-import", $e->getMessage());
+			HTML_FACTORY::printWarningAlert("Elev-import", "Varning/fel för elev $elevId: ".$e->getMessage());
 		}
 	}
 	
@@ -60,32 +69,53 @@ function parseKurser($fileRowArray, $lasarObj){
 		
 		
 			try {
-				HTML_FACTORY::printInfoAlert("Kurs-import", Kurs::importSave($kursId, $period, $lasarObj));
-				
-				if(count($rowFields) > $IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Elever"]){ // kollar så att elever är angivna i datan
-					$elevArr = getValuesArray($rowFields[$IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Elever"]]);
+				if(Kurs::importSave($kursId, $period, $lasarObj)){
+					HTML_FACTORY::printSuccessAlert("Kurs-import", "Kursen $kursId importerad");
+				} else {
+					HTML_FACTORY::printDangerAlert("Kurs-import", "Okänt fel för kurs $kursId");
+				}
+			} catch (Exception $e) {
+				HTML_FACTORY::printDangerAlert("Kurs-import", "Varning/fel för kurs $kursId: ".$e->getMessage());
+			}
 					
-					//var_dump($elevArr);
+			print "<p>elev idx: ".$IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Elever"]."</p>";
+			print "<p>value: ".$rowFields[$IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Elever"]]."</p>";
 
-					if(!empty($elevArr)){
-						try {
-							HTML_FACTORY::printInfoAlert("Elever-i-Kurs-import", Kurs::importSaveAddElever($kursId, $elevArr));
-						} catch (Exception $e) {
-							HTML_FACTORY::printDangerAlert("Elever-i-Kurs-import", $e->getMessage());
+			if(count($rowFields) > $IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Elever"]){ // kollar så att elever är angivna i datan
+				
+				$elevArr = getValuesArray($rowFields[$IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Elever"]]);
+				
+				//var_dump($elevArr);
+				HTML_FACTORY::printInfoAlert("Elever-i-Kurs-import", count($elevArr)." elever importerad för kurs $kursId");
+
+				if(!empty($elevArr)){
+					try {
+						if(Kurs::importSaveAddElever($kursId, $elevArr)){
+							$strElever = "<ul>";
+							foreach($elevArr as $strElev){
+								$strElever .= "<li>$strElev</li>";
+							}
+							$strElever .= "</ul>";
+							HTML_FACTORY::printSuccessAlert("Elever-i-Kurs-import", "Följande elev knöts til kurs $kursId$strElever");
 						}
+					} catch (Exception $e) {
+						HTML_FACTORY::printDangerAlert("Elever-i-Kurs-import", $e->getMessage());
 					}
 				}
-
-			} catch (Exception $e) {
-				HTML_FACTORY::printDangerAlert("Kurs-import", $e->getMessage());
+			} else {
+				HTML_FACTORY::printInfoAlert("Elever-i-Kurs-import", "INGA ELEVER finns i kurs $kursId");
 			}
-		
+
 		
 			// lärare (undervisande) lägger till saknade (ej mentorer) och kopplar till kurs
 			$lararArr = getValuesArray($rowFields[$IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Larare"]]);
 			foreach($lararArr as $lararId){
 				try {
-					HTML_FACTORY::printInfoAlert("Lärar-import", Larare::importSave($lararId, "", ""));
+					if(Larare::importSave($lararId, "", "")){
+						HTML_FACTORY::printSuccessAlert("Lärar-import", "Lärare $lararId importerades.");
+					} else {
+						HTML_FACTORY::printDangerAlert("Lärar-import", "Okänt fel för lärare $lararId");
+					}
 				} catch (Exception $e) {
 					HTML_FACTORY::printDangerAlert("Lärar-import", $e->getMessage());
 				}
@@ -99,7 +129,7 @@ function parseKurser($fileRowArray, $lasarObj){
 			}
 
 		} else {
-			HTML_FACTORY::printWarningAlert("Kurs-import", "Kurs med id $kursId finns INTE på WHITELIST. INTE importerad.");
+			HTML_FACTORY::printWarningAlert("Kurs-import", "Kurs med id [$kursId] finns INTE på WHITELIST. INTE importerad.");
 		}// slut om validerat namn
 	} // slut for each kurs
 }
@@ -120,7 +150,7 @@ function parseIndKurser($fileRowArray){
 	global $IMPORT;
 	
 	$currentIndKurs = "";
-	importLog("Behnadling påbörjas...");
+	importLog("Behandling påbörjas...");
 	
 	foreach($fileRowArray as $rowString){
 		$rowFields = getFieldsArray($rowString);
@@ -338,9 +368,9 @@ function getAndValidateFile($file_key){
 
 function printFileInfo($file_key, $filRowArray){
 	global $IMPORT;
-	print "<div class=\"info-box\">";
-	print "<p class=\"label\">Fil uppladdad</p>";
-	print "<h3>" . $_FILES[$file_key]["name"] . "</h3>";
+	print "<div class=\"alert alert-success\">";
+	print "<h4>Fil uppladdad</h4>";
+	print "<p" . $_FILES[$file_key]["name"] . "</p>";
    	print "<p>Typ: <span class=\"data\">" . $_FILES[$file_key]["type"] . "</span></p>";
     print "<p>Storlek: <span class=\"data\">" . ($_FILES[$file_key]["size"] / 1024.0) . " kB</p>";
 	if($IMPORT["Fil"]["PreivewData"]){
@@ -350,10 +380,12 @@ function printFileInfo($file_key, $filRowArray){
 }
 
 function printFileERRORInfo($file_key){
-	print "<div class=\"error\">";
-	print "<p class=\"label\">UPPLADDNING MISSLYCKADES</p>";
-	print "<h3>" . $_FILES[$file_key]["name"] . "</h3>";
-   	print "<p>" . $_FILES[$file_key]["error"] . "</p>";
+	print "<div class=\"alert alert-danger\">";
+	print "<h4>UPPLADDNING MISSLYCKADES</h4>";
+	print "<p>Fil: " . $_FILES[$file_key]["name"] . "</p>";
+   	print "<p>Fel:" . $_FILES[$file_key]["error"] . "</p>";
+   	print "<p><strong>Data:</strong></p>";
+   	print_r($_FILES[$file_key]);
     print "</div>";
 }
 

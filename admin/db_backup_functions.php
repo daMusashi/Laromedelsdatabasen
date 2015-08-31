@@ -10,7 +10,7 @@ function backup_tables($tables = '*')
 	} else {
 		$tname = "-".$tables;
 	}
-	$exportfilename = Config::DB_NAME . $tname . "_" . date("Y-m-d_H.i.s").".sql";
+	$exportfilename = Config_DB::DB_NAME . $tname . "_" . date("Y-m-d_H.i.s").".sql";
 	
 	$respons = array();
 	
@@ -34,11 +34,12 @@ function backup_tables($tables = '*')
 	foreach($tables as $table)
 	{
 		$result = mysqli_query(Config::$DB_LINK, 'SELECT * FROM '.$table);
+		print mysqli_error(Config::$DB_LINK);
 		$num_fields = mysqli_num_fields($result);
 		$num_rows = mysqli_num_rows($result);
 		$respons[$table] = $num_rows;
 		
-		$return.= 'DROP TABLE '.$table.';';
+		//$return.= 'DROP TABLE '.$table.';';
 		$row2 = mysqli_fetch_row(mysqli_query(Config::$DB_LINK, 'SHOW CREATE TABLE '.$table));
 		$return.= "\n\n".$row2[1].";\n\n";
 		
@@ -79,23 +80,23 @@ function backup_tables($tables = '*')
 // https://help.1and1.com/hosting-c37630/databases-c85147/mysql-database-c37730/importing-and-exporting-mysql-databases-using-php-a777072.html
 function testBackup2(){
 
-	$exportfilename = Config::DB_NAME . $tname . "_" . date("Y-m-d_H.i.s").".sql";
+	$exportfilename = Config_DB::DB_NAME . $tname . "_" . date("Y-m-d_H.i.s").".sql";
 	$mysqlExportPath = getcwd().Config::DB_BACKUP_PATH."/".$exportfilename;
 	//$mysqlExportPath = $DB_NAMN . "_" . date("Y-m-d_H.i.s").".sql";
 
 	//DO NOT EDIT BELOW THIS LINE
 	//Export the database and output the status to the page
-	$command='mysqldump --opt -h' .Config::DB_HOST .' -u' .Config::DB_USER .' -p' .Config::DB_PASS .' ' .Config::DB_NAME .' > ' .$mysqlExportPath;
+	$command='mysqldump --opt -h' .Config_DB::DB_HOST .' -u' .Config_DB::DB_USER .' -p' .Config_DB::DB_PASS .' ' .Config_DB::DB_NAME .' > ' .$mysqlExportPath;
 	$output = array();
 	//print "<p>".getcwd()."</p>";
 	//print "<p>".$mysqlExportPath."</p>";
 	exec($command,$output,$worked);
 	switch($worked){
 		case 0:
-			echo 'Database <b>' .onfig::DB_NAME .'</b> successfully exported to <b>~/' .$mysqlExportPath .'</b>';
+			echo 'Database <b>' .Config_DB::DB_NAME .'</b> successfully exported to <b>~/' .$mysqlExportPath .'</b>';
 			break;
 		case 1:
-			echo 'There was a warning during the export of <b>' .onfig::DB_NAME .'</b> to <b>' .$mysqlExportPath .'</b>';
+			echo 'There was a warning during the export of <b>' .Config_DB::DB_NAME .'</b> to <b>' .$mysqlExportPath .'</b>';
 			break;
 		case 2:
 			echo 'There was an error during export. Please check your values:<br/><br/><table><tr><td>MySQL Database Name:</td><td><b>' .onfig::DB_NAME .'</b></td></tr><tr><td>MySQL User Name:</td><td><b>' .Config::DB_USER .'</b></td></tr><tr><td>MySQL Password:</td><td><b>NOTSHOWN</b></td></tr><tr><td>MySQL Host Name:</td><td><b>' .$Config::DB_HOST  .'</b></td></tr></table>';

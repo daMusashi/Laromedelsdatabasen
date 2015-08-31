@@ -1,7 +1,7 @@
 <?php
 	require_once("class_abstract_dataobject.php");
 	require_once("class_bok.php");
-	//require_once("class_bok.php");
+	require_once("class_kurs.php");
 	//
 	
 	/*
@@ -64,10 +64,23 @@
 		return "?".CONFIG::PARAM_NAV."=bokningar-save";
 	}
 
+	public static function get($kursId, $bokId){
+		$result = Self::getAll(self::generateWhere($bokId, $kursId));
+
+		if(mysqli_num_rows($result) == 1){
+			$bokning = new Bokning();
+			$bokning->setFromAssoc(mysqli_fetch_assoc($result));
+		} else {
+			$bokning = null;
+		}
+
+		return $bokning;
+	}
+
 
 	public static function getAll($where = NULL, $idsOnly = false, $inkluderaArkiverade = false){
 		
-		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_DATUM.",".self::FN_ID, $inkluderaArkiverade);
+		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_DATUM.",".self::FN_ID, true, $inkluderaArkiverade);
 		//print "<p> bokning_get_all num-rows: ".mysqli_num_rows($result)."</p>";
 		$list = [];
 
@@ -125,6 +138,15 @@
 	// kollar om den exakta posten (id't) finns
 	public static function exists($id){
 		if(self::_countRows(self::TABLE, self::FN_ID . " = " . $id) > 0){
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	// kollar om den exakta posten (id't) finns
+	public static function kursExists($kursId){
+		if(self::_countRows(self::TABLE, self::FN_KURSID . " = '" . $kursId . "' AND arkiverad = 0") > 0){
 			return true;
 		} else {
 			return false;
@@ -241,15 +263,20 @@
 
 	}
 
+	public function arkivera(){
+		$this->arkiverad = true;
+		$this->save();
+	}
+
 	public function delete(){
 		if($this->isValid()){
-			$q = "DELETE FROM ".self::TABLE . "WHERE " . $this->where;
-			print "RADERAR BOKNING $q";
-			/*if(mysqli_query(Config::$DB_LINK, $q) == 1){
+			$q = "DELETE FROM ".self::TABLE . " WHERE id = " . $this->id;
+			//print "RADERAR BOKNING $q";
+			if(mysqli_query(Config::$DB_LINK, $q) == 1){
 				return true;
 			} else {
 				return false;
-			} */
+			} 
 			return true;
 		} else {
 			return false;
@@ -267,6 +294,49 @@
 
 	private function meExtists(){
 		return self::exists($this->id);
+	}
+
+	
+	/* TD-snippet som expanderar vid vidare val i tabell i lista */
+	public static function getTdInfoSnippet($index, $bokningsNamn, $bokningsObj, $kursObj){
+		
+
+		$collapseHTML = "";
+		$collapseId = "bokning-info-$index";
+
+
+
+		if(isLoggedIn()){
+			
+			
+			$collapseHTML .= "<div class=\"collapse info bokning-info\" id=\"$collapseId\">";
+			$collapseHTML .= "<p>Hämtas ut: <strong>" . $kursObj->startTermin->hamtasDesc . "</strong></p> <p>Lämnas in: <strong>" . $kursObj->slutTermin->lamnasDesc . "</strong></p>  <p>Bokningen gjordes ".$bokningsObj->datum."</p>";
+			$collapseHTML .= "<div class=\"btn-group btn-group-sm\" role=\"group\">";
+
+			$collapseHTML .= HTML_FACTORY::getKnappHTML($bokningsObj->urlView, "Visa bokning", "sm", "primary");
+			if(isAdmin()){
+				$collapseHTML .= HTML_FACTORY::getKnappHTML($bokningsObj->urlEdit, "Redigera bokning", "sm", "warning");
+				$collapseHTML .= HTML_FACTORY::getDeleteKnappHTML($bokningsObj->urlDelete, $bokningsNamn, "Radera bokning", "sm", "danger");
+			}
+			$collapseHTML .= HTML_FACTORY::getKnappHTML(Bok::getViewUrl($bokningsObj->bokId), "Visa läromedlet och alla dess bokningar", "sm", "primary");
+
+			$collapseHTML .= "</div></div>";
+		} 
+	
+
+		$html = "<div class=\"bokning-namn\">";		
+			if(isLoggedIn()){
+				$html .= "<a data-toggle=\"collapse\" href=\"#$collapseId\" aria-expanded=\"false\" aria-controls=\"$collapseId\" class=\"titel-link collapsed\">";
+					$html .= "<strong>" . $bokningsNamn . "</strong>";
+				$html .= "</a>";
+			} else {
+				$html .= "<strong>" . $bokningsNamn . "</strong>";
+			}
+		$html .= "</div>";
+		$html .= $collapseHTML;
+
+		return $html;
+
 	}
 }
 ?>

@@ -30,7 +30,7 @@
 	
 	public static function getAll($where = NULL){
 		
-		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_ID, true);
+		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_ID, false);
 
 		$list = array();
 		while($fieldArray = mysqli_fetch_assoc($result)){
@@ -69,6 +69,10 @@
 
 	public static function importSave($id, $fnamn, $enamn){
 		
+		$id = utf8_encode($id);
+		$fnamn = utf8_encode($fnamn);
+		$enamn = utf8_encode($enamn);
+
 		if(!self::_rowExist(self::TABLE, self::FN_ID, $id, true)){
 
 			$dataArr[self::FN_ID] = "'" . $id . "'";
@@ -77,9 +81,10 @@
 
 			self::_save(self::TABLE, $id, $dataArr, true, false);
 
-			return "Lärare med id $id IMPORTERAD";
+			return true;
 		} else {
-			return "Lärare med id $id finns redan. INTE importerad.";
+			throw new Exception("INGEN import skedde. Läraren finns redan");
+			return false;
 		}
 	}
 
