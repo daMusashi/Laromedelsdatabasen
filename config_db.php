@@ -16,12 +16,12 @@ final class CONFIG_DB {
 	const DB_PASS = "laromedelarkimedes";
 	*/
 
-	
+
 	// localhost
 	const DB_HOST = "localhost";
 	const DB_NAME = "laromedel";
 	const DB_USER = "root";
 	const DB_PASS = "";
-	
+
 }
 ?>

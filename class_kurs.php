@@ -19,6 +19,7 @@
 		const FN_ARKIVERAD = "arkiverad"; // field name
 		const FN_STARTTERMIN = "starttermin"; // field name
 		const FN_SLUTTERMIN = "sluttermin"; // field name
+		const FN_CREATED = "created"; // field name
 
 		const PK_ID = self::FN_ID; // fieldname PRIMARY key 
 		const FK_ID = "kurs_id"; // fieldname FORIEGN key 
@@ -61,7 +62,8 @@
 
 	public static function getAll($where = NULL, $idsOnly = false, $inkluderaArkiverade = false){
 		
-		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_STARTTERMIN.",".self::FN_ID, true, $inkluderaArkiverade);
+		//$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_STARTTERMIN.",".self::FN_ID, true, $inkluderaArkiverade);
+		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_ID, true, $inkluderaArkiverade);
 		//$list = array(new Kurs(self::OSPEC_ID));
 		$list = [];
 
@@ -160,33 +162,32 @@
 
 		$id = utf8_encode($id);
 
+		$firstTermin = $lasarObj->getFirstTermin();
+		$lastTermin = $lasarObj->getLastTermin();
+
+		$startTermin = $firstTermin;
+		$slutTermin = $lastTermin;
+
+		if($period == "HT"){
+			$slutTermin = $startTermin;
+		}
+
+		if($period == "VT"){
+			$startTermin = $slutTermin;
+		}
+
+		$dataArr[self::FN_ID] = "'" . $id . "'";
+		$dataArr[self::FN_STARTTERMIN] = "'" . $startTermin->id . "'";
+		$dataArr[self::FN_SLUTTERMIN] = "'" . $slutTermin->id . "'";
+		$dataArr[self::FN_ARKIVERAD] = "0";
+
 		if(!self::_rowExist(self::TABLE, self::FN_ID, $id, true)){
-
-			$firstTermin = $lasarObj->getFirstTermin();
-			$lastTermin = $lasarObj->getLastTermin();
-
-			$startTermin = $firstTermin;
-			$slutTermin = $lastTermin;
-
-			if($period == "HT"){
-				$slutTermin = $startTermin;
-			}
-
-			if($period == "VT"){
-				$startTermin = $slutTermin;
-			}
-
-			$dataArr[self::FN_ID] = "'" . $id . "'";
-			$dataArr[self::FN_STARTTERMIN] = "'" . $startTermin->id . "'";
-			$dataArr[self::FN_SLUTTERMIN] = "'" . $slutTermin->id . "'";
-			$dataArr[self::FN_ARKIVERAD] = "0";
-
 			self::_save(self::TABLE, $id, $dataArr, true, false);
-
 			return true;
 		} else {
-			throw new Exception("INGEN import skedde. Kursen finns redan");
-			return false;
+			print "<p>Kursen finns redan. Uppdaterar information (tid)</p>";
+			self::_save(self::TABLE, "'".$id."'", $dataArr, true, true);
+			return true;
 		}
 
 	}
@@ -286,7 +287,12 @@
 		//print "<p>$q (".mysqli_num_rows($result).")</p>";
 
 		//print "<p>Antal".mysql_num_rows($result)."</p>";
-		return mysqli_num_rows($result);
+		if(empty($result)){
+			$antal = 0;
+		} else {
+			$antal = mysqli_num_rows($result);
+		}
+		return $antal;
 	}
 	
 	
@@ -430,6 +436,63 @@
 
 		return $html;
 
+	}
+
+		// Tids-prylar
+
+	public static function getTimeSinceLastUpdate(){
+		$timeDiff =  self::getTimediffSinceLastUpdate();
+		//print_r($timeDiff);
+
+		$d = round(abs($timeDiff/(24*60*60)));
+		$t = round(abs($timeDiff/(60*60)));
+		$m = round(abs($timeDiff/(60)));
+
+		if($d > 0){
+			return $d." dagar gammalt";
+		}
+		if($t > 0){
+			return $t." timmar gammalt";
+		}
+		if($m > 0){
+			return $m." minuter gammalt";
+		}
+		return "av okänd ålder";
+	}
+
+	public static function getTimestringSinceLastUpdate(){
+		$timeDiff =  self::getTimediffSinceLastUpdate();
+		//print_r($timeDiff);
+
+		$d = round(abs($timeDiff/(24*60*60)));
+		$t = round(abs($timeDiff/(60*60)));
+		$t -= $d * 24;
+		$m = round(abs($timeDiff/(60)));
+		$m -= $t * 60;
+
+		return "$d dagar $t timmar $m minuter";
+	}
+
+	public static function getTimediffSinceLastUpdate(){
+		$timeUpdate = self::getTimeLastUpdate();
+		//print_r($timeUpdate);
+
+		$timeNow = strtotime("now");
+		//print_r($timeNow);
+
+		$timeDiff = abs($timeNow - $timeUpdate); // http://php.net/manual/en/datetime.diff.php
+		//print_r($timeDiff);
+
+		return $timeDiff;
+	}
+
+	public static function getTimeLastUpdate(){
+		$result = self::_getAllAsResurs(self::TABLE);
+		$kurs = mysqli_fetch_assoc($result);
+		//print_r($kurs[self::TABLE_KURS_FN_CREATED]);
+		$timeUpdate = strtotime($kurs[self::FN_CREATED]);
+
+		return $timeUpdate;
 	}
 
   

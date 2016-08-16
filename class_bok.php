@@ -3,6 +3,7 @@
 	require_once("class_abstract_dataobject.php");
 	require_once("class_kurs.php");
 	require_once("class_bokning.php");
+	require_once("class_bok_antal.php");
 	require_once("class_html_factory.php");
 	
 	class Bok extends Dataobject
@@ -101,7 +102,7 @@
 		return $list;
 	}
 
-	public static function getAllIds($where = NULL){
+	/*public static function getAllIds($where = NULL){
 		
 		$bocker = getAll($where);
 		$ids = [];
@@ -110,7 +111,7 @@
 		}
 		
 		return $ids;
-	}
+	}*/
 	
 	public static function helloStaticClass(){
 		print "<p>Hallå! (helloStaticClass)</p>";
@@ -266,14 +267,12 @@
 
 		} else {
 			throw new Exception("Läromedlet saknar essentiella värden och sparas inte.");
-			return false;
 		}
 
 		if($success == 1){
 			return true;
 		} else {
 			throw new Exception("Något gick fel vid sparande av läromedlet.");
-			return false;
 		}
 	}
 
@@ -406,7 +405,7 @@
 		return $ghost;
 
 	}
-
+	/* ANVÄND DATALAGER ISTÄLLET
 	public function getAntalBokade($terminId, $forLasar = false){
 		//print "<h4>Bok::getAntalBokade</h4>";
 		$num = 0;
@@ -420,7 +419,7 @@
 			//print "<p>elever/böcker: $num</p>";
 		}
 		return new Bokantal($this->antal, $num);
-	}
+	} */
 	
 	
 
@@ -453,24 +452,5 @@
 
 }
 
-class Bokantal {
-	public $bokbar= false;
-	public $antal = 0;
-	public $bokade = 0;
-	public $bokbara = 0;
 
-		
-
-	public function __construct($_antal = null, $_bokade = null) {
-		if(isset($_antal)&&isset($_bokade)){
-			$this->antal = $_antal;
-			$this->bokade = $_bokade;
-			$this->bokbara = $this->antal - $this->bokade;
-			if($this->bokbara > 0){
-				$this->bokbar = true;
-			}
-		}
-    }
-
-}
 ?>

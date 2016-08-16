@@ -19,6 +19,11 @@ Class Termin {
 
 	public $hamtasDesc = ""; // genereras - text för lämnas ut-tillfälle
 	public $lamnasDesc = ""; // genereras - text för lämnas in-tillfälle
+
+	// nedan används för att beräkna current-termin - now närmast passerat
+	const calc_start_mmdd = "08-01"; // drar tillbaka lite från 08-16'ish för att täcka slutet sommaren
+	const calc_mellan_mmdd = "01-30"; // drar fram lite från 01-20'ish för att bättre träff på HT
+	//const calc_slut_mmdd = "06-10";
 	
 
 	// Konstruktor
@@ -56,12 +61,12 @@ Class Termin {
     	$this->id = $this->lasar->id.":".$this->terminTyp;
 
     	$tv = "0";
-    	$tDesc = "HÖST";
+    	$tDesc = "HÖSTTERMIN";
     	$tillfalleText = "HÖST-terminens";
 
     	if($this->terminTyp == "vt"){ 
     		$tv = "1";
-    		$tDesc = "VÅR";
+    		$tDesc = "VÅRTERMIN";
     		$tillfalleText = "VÅR-terminens";
     	}
     	
@@ -70,7 +75,37 @@ Class Termin {
     	$this->descLong = $this->lasar->descLong." - ".$tDesc;
     	$this->hamtasDesc = $tillfalleText." START ".$this->lasar->descShort;
     	$this->lamnasDesc = $tillfalleText." SLUT ".$this->lasar->descShort;
+
     }
+
+	/*public function getCalculationDate($tillfalle = "start"){ // hämtas/ut vid start, lämnas/in vid slut
+		$start = "08-16";
+		$mellan = "01-20";
+		$slut = "06-10";
+
+		if($tillfalle == "start") {
+			if ($this->terminTyp == "ht") {
+				$yyyy = $this->lasar->startYear . "-";
+			} else {
+				$yyyy = $this->lasar->endYear . "-";
+			}
+			if ($this->terminTyp == "ht") {
+				$mmdd = $start;
+			} else {
+				$mmdd = $mellan;
+			}
+		} else {
+			$yyyy = $this->lasar->endYear . "-";
+
+			if ($this->terminTyp == "ht") {
+				$mmdd = $mellan;
+			} else {
+				$mmdd = $slut;
+			}
+		}
+
+		return date_create($yyyy.$mmdd);
+	}*/
 
     public function getNextTermin(){
     	if($this->terminTyp == "vt"){
@@ -112,19 +147,27 @@ Class Termin {
     public static function getCurrentTermin($modifier = 0){
 		$t = date_create();
 		$startYear = date_format($t,"Y");
-		$w = date_format($t,"W");
+		$m = date_format($t,"m");
+		//print "<p>månad:$m</p>";
 		$terminTyp = "ht";
-		
-		if($w < 32){
-			$startYear--;
+
+		// växlar till VT i februari och tom juli
+		if($m > 1 && $m < 8){
 			$terminTyp = "vt";
 		}
+		if($m < 8){
+			$startYear--;
+		}
+		/*if($m < 32){
+			$startYear--;
+			$terminTyp = "vt";
+		}*/
 		
 		return new Termin($startYear, $terminTyp);
 	}
 
 	public static function getCurrentTerminId($modifier = 0){
-		$termin = getCurrentTermin($modifier);
+		$termin = self::getCurrentTermin($modifier);
 		
 		return $termin->id;
 	}

@@ -77,10 +77,17 @@
 		return $bokning;
 	}
 
+	public static function getId($kursId, $bokId){
+		$result = Self::getAll(self::generateWhere($bokId, $kursId), true);
+
+		return $result[0];
+	}
+
 
 	public static function getAll($where = NULL, $idsOnly = false, $inkluderaArkiverade = false){
-		
-		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_DATUM.",".self::FN_ID, true, $inkluderaArkiverade);
+
+		//$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_DATUM.",".self::FN_ID, true, $inkluderaArkiverade);
+		$result = self::_getAllAsResurs(self::TABLE, $where, self::FN_KURSID, true, $inkluderaArkiverade);
 		//print "<p> bokning_get_all num-rows: ".mysqli_num_rows($result)."</p>";
 		$list = [];
 
@@ -88,22 +95,22 @@
 
 			if($idsOnly){
 				$bokning = $fieldArray[self::FN_ID];
-				//print "$bokning ";
+				array_push($list, $bokning);
 			} else {
 				$bokning = new Bokning($fieldArray);
-				//print " *".$bokning->id;
+				if($bokning->isValid()){
+					array_push($list, $bokning);
+				}
 			}
 
-			if($bokning->isValid()){
-				array_push($list, $bokning);
-			}
+
 
 		}
 		
 		return $list;
 	}
 
-	
+	/* ANVÄND DATALAGER ISTÄLLET
 	public static function getForBok($bokId, $terminId = null, $forLasar = false){
 		
 
@@ -121,7 +128,7 @@
 
 			return self::getAll($where);
 		}
-	}
+	} */
 	
 	public static function getForKurs($kursId){
 		return self::getAll(Kurs::FK_ID . " = '$kursId'");

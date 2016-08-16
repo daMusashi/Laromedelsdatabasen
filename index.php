@@ -1,10 +1,12 @@
-<?php session_start(); ?>
 <?php require_once("config.php"); ?>
 <?php require_once("functions.php"); ?>
 <?php require_once("class_html_factory.php"); ?>
 <?php require_once("db_connect.php"); ?>
 <?php require_once("login_validate.php"); ?>
 <?php require_once("class_termin.php"); ?>
+
+<?php require_once("session.php"); ?>
+
 <!doctype html>
 <html>
 <head>
@@ -31,8 +33,8 @@ $(document).ready(function(){
 <body>
    
 <?php 
-	
-	if(CONFIG::$DB_SUCCESS){  
+
+	if(CONFIG::$DB_SUCCESS){
 		require_once("login.php");
 	}
 	include("header.php");
@@ -46,7 +48,7 @@ $(document).ready(function(){
 <p></p>
 <?php 
 
-require_once("notice.php");
+//require_once("notice.php");
 
 if(CONFIG::$DB_SUCCESS){  
 
@@ -72,6 +74,6 @@ if(CONFIG::$DB_SUCCESS){
 </div><!-- main -->
 
 <?php include("footer.php"); ?>
-
+<?php include("datalager.php"); ?>
 </body>
 </html>

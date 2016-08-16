@@ -62,6 +62,7 @@ if($mode == "delete"){
 	// SQL DELETE
 	if($bokning->delete()){
 		$deleteSuccess = true;
+		$_SESSION["datalagerDataChanged"] = true;
 	} else {
 		$deleteSuccess = false;
 	} 
@@ -83,6 +84,7 @@ if(($mode == "save")){
 			$saveSuccess = true;
 			$mode = "view"; // växlar läge till view för att se sparad data
 			HTML_FACTORY::printInfoAlert("Genomfört", "Bokningen har sparats.");
+			$_SESSION["datalagerDataChanged"] = true;
 
 		} catch (Exception $e) {
 			$rubrik = "<span class=\"warning\">Bokningen misslyckades :(</span>";

@@ -763,42 +763,12 @@ function rowExist($table, $idField, $id, $idIsString = true){
 function getDbTabellHTML($tabellNamn){
 	$html = "";
 	$q = "SELECT * FROM $tabellNamn";
-	$r = mysql_query($q);
-	// fältnamn
+	$r = mysqli_query(CONFIG::$DB_LINK, $q);
+	return getDbResursHTML($r);
 
-	if(mysql_num_rows($r) > 0){
-	
-		$html = $html . "<table cellspacing=\"0\" border=\"1\" class=\"border tiny-data\">";
-	
-		$firstRow = true;
-		while($row = mysql_fetch_assoc($r)){
-			if($firstRow){
-				$html = $html . "<tr>";
-				foreach($row as $fname => $fvalue){
-					$html = $html . "<th>$fname</th>";
-				}
-				$html = $html . "</tr>";
-			}
-		
-			$html = $html . "<tr>";
-			foreach($row as $fname => $fvalue){
-				$html = $html . "<td>$fvalue</td>";
-			}
-			$html = $html . "</tr>";
-		
-			$firstRow = false;
-		}
-	
-		$html = $html . "</table>";
-		
-	} else {
-		
-		$html = $html . "<p>Det finns ingen data i tabellen :(</p>";
-		
-	}
-	
-	return $html;
+
 }
+
 
 function rowExistRelation($table, $idField1, $idField2, $id1, $id2, $id1IsString = true, $id2IsString = true){
 	if($id1IsString){

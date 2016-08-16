@@ -33,9 +33,9 @@ class Lasar {
 	private function generateProps(){
 		$this->endYear = $this->startYear + 1; 
 		$this->id = $this->startYear . "-" . $this->endYear; 
-		$this->desc = "LÅ " . substr($this->startYear, 2, 2) . "-" . substr($this->endYear, 2, 2); 
-		$this->descLong = "Läsåret " . $this->id;
-		$this->descShort = substr($this->startYear, 2, 2) . "-" . substr($this->endYear, 2, 2);
+		$this->desc = "LÅ " . substr($this->startYear, 2, 2) . "/" . substr($this->endYear, 2, 2);
+		$this->descLong = "Läsåret " . $this->startYear . "/" . substr($this->endYear, 2, 2);;
+		$this->descShort = substr($this->startYear, 2, 2) . "/" . substr($this->endYear, 2, 2);
 		$this->value = (int)$this->startYear;
 	}
 

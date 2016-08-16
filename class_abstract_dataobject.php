@@ -6,6 +6,10 @@
 		const FN_ARKIVERAD = "arkiverad"; // field name
 		
 		private $arkivbar = false;
+
+		static $sqlCallsSelect = 0;
+		static $sqlCallsCount = 0;
+		static $sqlCallsTablesUsed = "";
 		
 		public function __construct($isArkivbar = false){
 			$this->arkivbar = $isArkivbar;
@@ -13,14 +17,19 @@
 		
 		public static function _getAllAsResurs($table, $where = NULL, $orderByField = NULL, $isArkivbar = false, $inkluderaArkiverade = false){
 			$compiledWhere = self::getCompiledWhere($where, $isArkivbar, $inkluderaArkiverade);
+			//print "<p>compiledWhere: [$compiledWhere]</p>";
 			$compiledOrderBy = self::getCompiledOrderBy($orderByField);
+			//print "<p>compiledOrderBy: [$compiledOrderBy]</p>";
 						
 			$q = "SELECT * FROM ".$table." ".$compiledWhere.$compiledOrderBy;
 		
 			$result = mysqli_query(CONFIG::$DB_LINK, $q);
 			
 			self::checkError($result, $q, "abstract_dataobject::_getAllAsResurs");
-			
+
+			self::$sqlCallsSelect++;
+			self::$sqlCallsTablesUsed .= ", ".$table;
+
 			return $result;
 		}
 		
@@ -41,10 +50,12 @@
 			
 			$q = "SELECT * FROM ".$table.$compiledWhere;
 			//print "<p>abstract _countRows: $q</p>";
+			self::$sqlCallsCount++;
+			self::$sqlCallsTablesUsed .= ", ".$table;
 			return mysqli_num_rows(mysqli_query(CONFIG::$DB_LINK, $q));
 		}
 
-		public static function _save($table, $id, $saveDataArr, $isValid = true, $exists = false){
+		public static function _save($table, $id, $saveDataArr, $isValid = true, $exists = false, $idIsString = false){
 
 			if($isValid){
 
@@ -53,17 +64,23 @@
 					$q = "UPDATE $table SET "; 
 					
 					foreach ($saveDataArr as $fld => $value) {
-						$q .= "$fld = $value, ";
+						if($value != $id){
+							$q .= "$fld = $value, ";
+						}
 					}
 					$q = substr($q, 0, strlen($q) - 2); // tar bort sista ,
 
-					$q .= " WHERE id =" . $id;
+					if($idIsString){
+						$q .= " WHERE id ='" . $id . "''";
+					} else {
+						$q .= " WHERE id =" . $id;
+					}
 
 					$ret = mysqli_query(Config::$DB_LINK, $q);
 					if (empty($ret)){
 						throw new Exception("Något gick vid fel vid <strong>uppdatering</strong>.
 							<br>Query: $q
-							<br>DB Error: ".mysqli_connect_error(Config::$DB_LINK));
+							<br>DB Error: ".mysqli_error(Config::$DB_LINK));
 					}
 				} else {
 					// add
@@ -85,26 +102,15 @@
 
 					$ret = mysqli_query(Config::$DB_LINK, $q);
 					if (empty($ret)){
-						throw new Exception("Något gick vid fel vid <strong>skapande av post</strong>.
+						throw new Exception("<p>Något gick vid fel vid <strong>skapande av post</strong>.
 							<br>Query: $q
-							<br>DB Error: ".mysqli_connect_error(Config::$DB_LINK));
+							<br>DB Error: [".mysqli_error(Config::$DB_LINK)."]</p>");
 					}
 				}
 			} else {
 				throw new Exception("Informationsobjektet är inte komplett för sparande");
 			}
 
-		}
-
-		public static function _delete($table, $where){
-			$q = "DELETE FROM bocker WHERE ".self::FN_ID." = '" . $this->iid. "'";
-			
-			$ret = mysqli_query(Config::$DB_LINK, $q);
-			if (empty($ret)){
-				throw new Exception("Något gick vid fel vid <strong>redering</strong>.
-					<br>Query: $q
-					<br>DB Error: ".mysqli_connect_error(Config::$DB_LINK));
-			} 
 		}
 
 		public static function _propToString($prop){
@@ -127,6 +133,44 @@
 					return $prop;
 				}
 			}
+		}
+
+		public static function getDbResursHTML($resurs){
+			$html = "";
+
+
+			if(mysqli_num_rows($resurs) > 0){
+
+				$html = $html . "<table cellspacing=\"0\" border=\"1\" class=\"border tiny-data\">";
+
+				$firstRow = true;
+				while($row = mysqli_fetch_assoc($resurs)){
+					if($firstRow){
+						$html = $html . "<tr>";
+						foreach($row as $fname => $fvalue){
+							$html = $html . "<th>$fname</th>";
+						}
+						$html = $html . "</tr>";
+					}
+
+					$html = $html . "<tr>";
+					foreach($row as $fname => $fvalue){
+						$html = $html . "<td>$fvalue</td>";
+					}
+					$html = $html . "</tr>";
+
+					$firstRow = false;
+				}
+
+				$html = $html . "</table>";
+
+			} else {
+
+				$html = $html . "<p>Det finns ingen data i tabellen :(</p>";
+
+			}
+
+			return $html;
 		}
 
 		public static function _propToStringListitem($propName, $propValue){
@@ -192,6 +236,16 @@
 			} else {
 				return "";	
 			}
+		}
+
+		public static function getDebugSqlCalls(){
+			$html = "";
+			$sessionid = session_id();
+			$html .= "<p>SQL SELECT calls for [$sessionid]; ".self::$sqlCallsSelect."</p>";
+			$html .= "<p>SQL COUNT calls for [$sessionid]; ".self::$sqlCallsCount."</p>";
+			$html .= "<p>Tables used for [$sessionid]; ".self::$sqlCallsTablesUsed."</p>";
+
+			return $html;
 		}
 		
 		public static function helloStaticAbstract(){

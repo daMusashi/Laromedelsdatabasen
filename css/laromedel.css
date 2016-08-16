@@ -2,11 +2,12 @@ html { overflow-y: scroll; }
 
 header.site-header .branding { background-color: #444; color: #eee; }
 header.site-header .branding h1 { font-size: 140%; margin: 0px; margin-top: 3px; margin-bottom: 3px; }
-header.site-header .branding h1 .version { font-size: 50%; color: #aaa; }
+header.site-header .branding h1 .minor { font-size: 50%; color: #aaa; }
 
 #main { padding-top: 80px; }
 
-footer { text-align: right; margin-top: 20px; padding-top: 5px; border-top-style: solid; border-top-color: #aaa; border-top-width: 1px; color: #aaa; font-size: 70%; }
+footer { text-align: right; margin-top: 20px; padding-top: 5px; border-top-style: solid; border-top-color: #aaa; border-top-width: 1px; color: #888; font-size: 70%; }
+footer .debug { color: #ccc; }
 
 .alert h3 { margin: 0px; }
 
@@ -33,7 +34,16 @@ form.view .form-group label { color: #777777; font-weight: normal; margin: 0px; 
 form.view .form-group .form-control-static { font-weight: bold; font-size: 130%; margin-top: 0px; }
 
 .utskrift-data { margin-bottom: 100px; border-bottom-width: 2px; border-bottom-style: solid; border-bottom-color: #333; }
-.utskrift-data header { margin-bottom: 30px; position: relative; }
+.utskrift-data header { margin-bottom: 30px; position: relative; /*h3 {
+	overflow: auto;
+	span {
+		display: block;
+		background: black;
+		color: white;
+		padding: 0.5em;
+		float: left;
+	}
+}*/ }
 .utskrift-data header .print-logo { position: absolute; right: 0px; top: 0px; height: 100px; }
 
 .loading { display: inline-block; }

@@ -4,9 +4,6 @@
 	require_once("page_functions.php");
 	require_once("page_functions_navs.php");
 
-	if(!isset($_SESSION["bok-urval"])){
-		$_SESSION["bok-urval"] = "*";
-	}
 	$activeTermin = new Termin();
 	$activeTermin->setFromId($_SESSION["bok-termin"]);
 ?>

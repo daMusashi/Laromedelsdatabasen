@@ -8,6 +8,9 @@ require_once("config.php");
 //require_once("admin/dev_functions.php");
 
 require_once("db_connect.php");
+require_once("class_datalager.php");
+//require_once("page_functions.php");
+
 
 if(isset($_GET[Config::PARAM_AJAX])){
 	$html = "";
@@ -56,6 +59,9 @@ if(isset($_GET[Config::PARAM_AJAX])){
 			} else {
 				printAjaxError("Urval saknas för anrop till läromedelslista.");
 			}
+			if(Config::DEBUG) {
+				print '<div id="db-debug">'.Datalager::getDebugSqlCalls().'</div>';
+			}
 			break;
 		
 		case "get-bocker-pagelist-termin":
@@ -66,6 +72,9 @@ if(isset($_GET[Config::PARAM_AJAX])){
 			} else {
 				printAjaxError("Urval saknas för anrop till läromedelslista.");
 			}
+			if(Config::DEBUG) {
+				print '<div id="db-debug">'.Datalager::getDebugSqlCalls().'</div>';
+			}
 			break;
 		
 		case "get-bokningar-pagelist":
@@ -73,6 +82,9 @@ if(isset($_GET[Config::PARAM_AJAX])){
 			if(isset($_GET[Config::PARAM_ID])){ // terminId
 				$_SESSION["active-termin"] = $_GET[Config::PARAM_ID];
 				print getBokningarPageList();
+				if(Config::DEBUG) {
+					print '<div id="db-debug">'.Datalager::getDebugSqlCalls().'</div>';
+				}
 			} else {
 				printAjaxError("Urval saknas för anrop till bokningslista.");
 			}
@@ -81,7 +93,10 @@ if(isset($_GET[Config::PARAM_AJAX])){
 			include "page_functions.php";
 			if(isset($_GET[Config::PARAM_ID])&&isset($_GET[Config::PARAM_REF_ID])){ // terminId & bokId
 					$_SESSION["active-termin"] = $_GET[Config::PARAM_ID];
-					print getBokningarPageList($_GET[Config::PARAM_REF_ID], "");
+				print getBokningarPageList($_GET[Config::PARAM_REF_ID], "");
+				if(Config::DEBUG) {
+					print '<div id="db-debug">'.Datalager::getDebugSqlCalls().'</div>';
+				}
 			} else {
 				printAjaxError("Urval saknas för anrop till bokningslista i bokvisning.");
 			}
@@ -106,6 +121,13 @@ if(isset($_GET[Config::PARAM_AJAX])){
 			} else {
 				printAjaxError("Värden saknas för uppdatering av terminer för kurs");
 			}
+			break;
+
+		case "update-datalager":
+			require_once("class_datalager.php");
+			Datalager::update();
+			$_SESSION["datalagerDataChanged"] = false;
+			print "ok";
 			break;
 
 		default:

@@ -7,6 +7,8 @@
 	    session_unset();     // töm alla variabler
 	    session_destroy();   // förstör disksparad session-data
 		//print "<p>Försört session</p>";
+		header("Location: /");
+		die();
 	} else {
 		//print "<p>Pågående session</p>";
 	}

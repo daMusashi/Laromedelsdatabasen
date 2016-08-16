@@ -1,7 +1,9 @@
 <?php
 require_once("class_bokning.php");
+require_once("class_bok.php");
 require_once("class_kurs.php");
 require_once("class_klass.php");
+require_once("class_datalager.php");
 
 class HTML_FACTORY_PRINT {
 
@@ -70,6 +72,7 @@ class HTML_FACTORY_PRINT {
 		return $html;
 	}
 
+
 	public static function getElevAjaxSelect($klassId){
 		$id = "print-elev";
 		$title = "Välj elev...";
@@ -131,7 +134,7 @@ class HTML_FACTORY_PRINT {
 	}
 
 
-	public static function getBokTableForElevInd($elevId){
+	/*public static function _getBokTableForElevInd($elevId){
 
 		$elev = new Elev();
 		$elev->setFromId($elevId);
@@ -167,6 +170,103 @@ class HTML_FACTORY_PRINT {
 		}
 
 		return HTML_FACTORY_PRINT::_getTableHead("För ".$elev->namn." (".$elev->klass.")") . $html . HTML_FACTORY_PRINT::_getTableFoot();
+	}*/
+
+	public static function _getBokTableForElevInd($elevId){
+
+		$elev = new Elev();
+		$elev->setFromId($elevId);
+
+		$bokningar = Datalager::getBokningarForElev($elevId);
+
+		$html = "";
+
+		foreach($bokningar as $bokning){
+
+			$kurs = new Kurs();
+			$kurs->setFromId($bokning[Datalager::TABLE_ELEVBOCKER_FN_KURSID]);
+			$bok = new Bok();
+			$bok->setFromId($bokning[Datalager::TABLE_ELEVBOCKER_FN_BOKID]);
+
+			$html .= HTML_FACTORY_PRINT::_getBokTableRow($kurs, $bok);
+		}
+
+		return HTML_FACTORY_PRINT::_getTableHead("För ".$elev->namn." (".$elev->klass.")") . $html . HTML_FACTORY_PRINT::_getTableFoot();
+	}
+
+	public static function getBokTableForElevInd($elevId){
+
+		$elev = new Elev();
+		$elev->setFromId($elevId);
+
+		$bokningar = Datalager::getBokningarForElev($elevId);
+
+		$bockningar_lamnain = [];
+		$bockningar_hamtaut = [];
+		$bockningar_behall = [];
+
+		$html = "";
+
+		$nowTermin = Termin::getCurrentTermin();
+		$nextTermin = $nowTermin->getNextTermin();
+
+		foreach($bokningar as $bokning){
+			$utTermin = new Termin();
+			$utTermin->setFromId($bokning[Datalager::TABLE_ELEVBOCKER_FN_UT]);
+			$inTermin = new Termin();
+			$inTermin->setFromId($bokning[Datalager::TABLE_ELEVBOCKER_FN_IN]);
+			//print "in".$utTermin->id.":";
+			//print "ut".$utTermin->id.":";
+			//print "nu".Termin::getCurrentTerminId().":";
+			$bokning_pushed = false;
+			if($nowTermin->id == $bokning[Datalager::TABLE_ELEVBOCKER_FN_IN]){
+				array_push($bockningar_lamnain, $bokning);
+				$bokning_pushed = true;
+			}
+			if($nextTermin->id == $bokning[Datalager::TABLE_ELEVBOCKER_FN_UT]){
+				array_push($bockningar_hamtaut, $bokning);
+				$bokning_pushed = true;
+			}
+			if(!$bokning_pushed){
+				array_push($bockningar_behall, $bokning);
+			}
+
+			$kurs = new Kurs();
+			$kurs->setFromId($bokning[Datalager::TABLE_ELEVBOCKER_FN_KURSID]);
+			$bok = new Bok();
+			$bok->setFromId($bokning[Datalager::TABLE_ELEVBOCKER_FN_BOKID]);
+
+			$html .= HTML_FACTORY_PRINT::_getBokTableRow($kurs, $bok);
+		}
+
+		$html = "";
+		if(count($bockningar_lamnain) > 0){
+			$html .= "<h4>ÅTERLÄMNA</h4>";
+			$html .= self::_getTableHead();
+			$html .= self::_getHTMLTDsForBokningArray($bockningar_lamnain);
+			$html .= self::_getTableFoot();
+		}
+		if(count($bockningar_hamtaut) > 0){
+			$html .= "<h4>LÅNA</h4>";
+			$html .= self::_getTableHead();
+			$html .= self::_getHTMLTDsForBokningArray($bockningar_hamtaut);
+			$html .= self::_getTableFoot();
+		}
+		if(count($bockningar_behall) > 0){
+			$html .= "<h4>Behåll</h4>";
+			$html .= self::_getTableHead();
+			$html .= self::_getHTMLTDsForBokningArray($bockningar_behall);
+			$html .= self::_getTableFoot();
+		}
+		/*$html .= "<h4>DEBUG</h4>";
+		$html .= self::_getTableHead();
+		$html .= self::_getHTMLTDsForBokningArray($bokningar);
+		$html .= self::_getTableFoot();*/
+
+		$pageHead = self::_getPageHead("LÄROMEDELSLISTA", $elev->namn." (".$elev->klass.")", $nextTermin->descLong);
+		$pageFoot = self::_getPageFoot();
+
+		return $pageHead . $html . $pageFoot;
 	}
 
 	public static function getBokTableForElevklass($klassId){
@@ -180,6 +280,23 @@ class HTML_FACTORY_PRINT {
 
 		return $html;
 
+	}
+
+	private static function _getHTMLTDsForBokningArray($bokningarArray){
+
+		$html = "";
+
+		foreach($bokningarArray as $bokning){
+
+			$kurs = new Kurs();
+			$kurs->setFromId($bokning[Datalager::TABLE_ELEVBOCKER_FN_KURSID]);
+			$bok = new Bok();
+			$bok->setFromId($bokning[Datalager::TABLE_ELEVBOCKER_FN_BOKID]);
+
+			$html .= HTML_FACTORY_PRINT::_getBokTableRow($kurs, $bok);
+		}
+
+		return $html;
 	}
 	
 
@@ -201,22 +318,26 @@ class HTML_FACTORY_PRINT {
 		return $html;
 	}
 
-	private static function _getTableHead($titel, $useAntal = false){
-		$currentTermin = Termin::getCurrentTermin();
+	private static function _getPageHead($typeTitel, $elevTitel, $forTerminDesc){
 
 		$html = "
 				<div class=\"utskrift-data\">
 				<header>
 				<img class=\"print-logo\" src=\"gfx/logo_alvkullen_print.png\">
-				<p><strong>".$currentTermin->descLong."</strong></p>
-				<h1>Litteraturlista</h1>
-				<h3>".$titel."</h3>
+				<p><strong>".$forTerminDesc."</strong></p>
+				<h1>".$typeTitel."</h1>
+				<h3><span class=\"elev-namn\">$elevTitel</span></h3>
 				<div class=\"meta\"><em>
 					Utskriven ".date("Y-m-d")."
-				</em></div> 
+				</em></div>
 				</header>
 		";
-		$html .= "<table class=\"table\">
+
+		return $html;
+	}
+	private static function _getTableHead($useAntal = false){
+
+		$html = "<table class=\"table\">
 					<tr>
 						<th>Titel</th>
 						<th>Författare</th>";
@@ -233,7 +354,13 @@ class HTML_FACTORY_PRINT {
 	}
 
 	private static function _getTableFoot(){
-		$html = "</table></div>";
+		$html = "</table>";
+
+		return $html;
+	}
+
+	private static function _getPageFoot(){
+		$html = "</div>";
 
 		return $html;
 	}
@@ -271,11 +398,14 @@ class HTML_FACTORY_PRINT {
 			$html .= "<option value=\"$value\">$etikett</option>";
 		}
 
+
 		$html .= "
 				</select>
 
 			<span id=\"container-select-elev\"></span>
 		";
+
+
 
 		return $html;
 	}

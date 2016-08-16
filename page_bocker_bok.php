@@ -57,6 +57,7 @@ if($mode == "delete"){
 			$bok->save();
 			$saveSuccess = true;
 			$mode = "view"; // växlar läge till view för att se sparad data
+			$_SESSION["datalagerDataChanged"] = true;
 
 		} catch (Exception $e) {
 			$rubrik = "<span class=\"warning\">Sparandet av boken misslyckades :(</span>";
@@ -190,6 +191,9 @@ if($mode == "delete"){
 			break;
 		default:
 			print HTML_FACTORY::getKnappHTML("?".Config::PARAM_NAV."=bocker", "Tillbaka", "", "primary", "Till boklistan");
+			if(isLoggedin()){
+			    print HTML_FACTORY::getKnappHTML($bok->urlEdit, "Redigera bok", "sm", "warning");
+			}
 			
  	} 
 ?>

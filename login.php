@@ -84,7 +84,7 @@ function login(){
     .done(function(data) {
         //$("#ajax-debug").text(data);
       mnnDebug("logout", "resultat: "+ cleanString(data));
-      location.reload(true);
+      window.location = "/";
     });
   }
   </script>

@@ -2,7 +2,9 @@
 require_once("functions.php");
 require_once("class_kurs.php");
 require_once("class_bok.php");
+require_once("class_bok_antal.php");
 require_once("class_larare.php");
+require_once("class_datalager.php");
 
 function getKurserPageList(){
 
@@ -148,7 +150,8 @@ function getBockerPageList(){
 		
 		$statusClass = "";
 
-			$antalObj = $bok->getAntalBokade($activeTermin->id);
+			$antalObj = new Bokantal($bok->antal, Datalager::getAntalBokningarForBok($bok->id, $activeTermin->id));
+			//$antalObj = $bok->getAntalBokade($activeTermin->id);
 			
 			if($antalObj->bokbar){
 				$statusClass = "";
@@ -212,15 +215,24 @@ function getBokningarPageList($bokId = ""){
 		$bokare = "*";
 	}
 
-	$kurserInTermin = Kurs::getAllForLasar($_SESSION["active-termin"]);
+	/*$kurserInTermin = Kurs::getAllForLasar($_SESSION["active-termin"]);
 	//print "<p>factory: getbokningarHTML antal kurser:".count($kurserInTermin)."</p>";
 	$bokningar = [];
 
 	foreach ($kurserInTermin as $kurs) {
 		$bokningar = array_merge($bokningar, Bokning::getForKurs($kurs->id));
+	}*/
+
+	$bokningsIds = Datalager::getBokningsIdsForTermin($_SESSION["active-termin"], true);
+	$bokningar = [];
+	foreach($bokningsIds as $bokningsId){
+		$bokning = new Bokning();
+		$bokning->setFromId($bokningsId);
+		array_push($bokningar, $bokning);
 	}
 
-	
+	$bokadeBocker = Datalager::getBokadeBockerForBokningsArr($bokningar, $_SESSION["active-termin"]);
+
 	$html = "<table class=\"table main table-striped bockningar\"><thead><tr>";
 	$html .= "<th>Bokning</th>";
 	$html .= "<th>Antal böcker</th>";
@@ -245,13 +257,15 @@ function getBokningarPageList($bokId = ""){
 
 				$bok = new Bok();
 
-				if(Bok::exists($bokning->bokId)){
+				//if(Bok::exists($bokning->bokId)){
 					$bok->setFromId($bokning->bokId);
-				} else {
-					$bok = Bok::getGhostBok($bokning->bokId);
-				}
+				//} else {
+					//$bok = Bok::getGhostBok($bokning->bokId);
+				//}
 
-				$antalObj = $bok->getAntalBokade($_SESSION["active-termin"]);
+				//$antalObj = $bok->getAntalBokade($_SESSION["active-termin"]);
+				$antalObj = new Bokantal($bok->antal, $bokadeBocker[$bok->id]);
+				//$antalObj = new Bokantal($bok->antal, 100);
 
 				$kurs = new Kurs();
 				$kurs->setFromId($bokning->kursId);
@@ -270,7 +284,7 @@ function getBokningarPageList($bokId = ""){
 				$bokningsNamn = $bokning->kursId . " &rArr; " . $bok->fullTitel;
 				$html = $html .  "<td class=\"major\">" . Bokning::getTdInfoSnippet($index, $bokningsNamn, $bokning, $kurs) . "</td>";
 				//$html = $html .  "<td>" . $bokning["bok_id"] . "</td>";
-				$html = $html .  "<td>" . Kurs::getAntalElever($kurs->id) . "</td>";
+				$html = $html .  "<td>" . Datalager::getAntalEleverForKurs($kurs->id) . "</td>";
 				$html = $html .  "<td>" . $overBooked . "</td>";
 			
 				$html = $html .  "<td>" . $bokning->bokare . "</td>";
@@ -292,7 +306,7 @@ function getBokningarPageList($bokId = ""){
 		</script>
 	";
 
-	if($index == 0){
+	if(count($bokningar) == 0){
 		$termin = new Termin();
 		$termin->setFromId($_SESSION["active-termin"]);
 		if($bokare == "*"){
@@ -300,6 +314,8 @@ function getBokningarPageList($bokId = ""){
 		} else {
 			$html = "<em>Det finns inga bokningar för bokare <strong>".$bokare."</strong> under ".$termin->lasar->descLong."</em>";
 		}
+	} else {
+		//print "<p>".count($bokningar)." bokningar</p>";
 	}
 	
 	return $html;

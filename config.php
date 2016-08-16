@@ -4,25 +4,15 @@ ini_set('display_startup_errors',1);
 error_reporting(E_ALL); // E_ERROR / E_ALL
 
 setlocale(LC_ALL,"SV");
+ini_set('max_execution_time', 120); //120 seconds = 2 minuter
 
 require_once("class_termin.php");
 
-if(!isset($_SESSION["active-termin"])){ 
-	$activeTermin = Termin::getCurrentTermin();
-	$_SESSION["active-termin"] = $activeTermin->id;
-}
-if(!isset($_SESSION["bok-termin"])){ // för tillgänglighet
-	$activeTermin = Termin::getCurrentTermin();
-	$_SESSION["bok-termin"] = $activeTermin->id;
-}
-if(!isset($_SESSION["bokning-bokare"])){ // för tillgänglighet
-	$_SESSION["bokning-bokare"] = "*";
-}
 
 final class CONFIG {
 	
-	const VERSION = "2.6"; // med avslutande "/" (om inte tom, då bara "")
-	const DEBUG = true; // om visa debug-prylar
+	const VERSION = "3.2"; // med avslutande "/" (om inte tom, då bara "")
+	const DEBUG = false; // om visa debug-prylar
 
 	const SIMPLE_MODE = false; // Visar bara det viktigaste - såsom bokning - när inte all data är klar
 	// se publics nedan för NAVs i simple mode
@@ -52,6 +42,8 @@ final class CONFIG {
 	const SESSION_TIMEOIUT = 3600; // timeout på 60 min
 
 	const BOK_INSTOCK_WARNING = 20; // antalet böcker kvar som generar varnings-färg
+
+	const DATALAGER_MIN_CACHE_TIME = 10; // Antalet minuter datalagret måste vara gammalt innan det får uppdateras
 
 	const NULL = "null"; // används som null-värde främst i forms
 

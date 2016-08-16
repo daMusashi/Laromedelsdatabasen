@@ -12,17 +12,24 @@
 </ol>
 
 <?php
+global $IMPORT;
 if(isset($_GET["upload"])){
 
 	if(isset($_FILES["rapport-elever"])&&isset($_FILES["rapport-grupper"])){
-		
+
 		// Kolla även http://www.php.net/manual/en/features.file-upload.php
 		
 		importLog("<div><h2>Rapport från Elev/grupp-import</h2>");
-		
+
 		$filesSucces = true;
 		importLog("<h3>Läser in Elev-rapport</h3>");
 		$importfil_elever = getFile("rapport-elever");
+		print '<div class="alert alert-info">';
+			print "<h3>Importerar med formatet:</h3>";
+			foreach($IMPORT["Rapporter"]["Elever"]["FieldIndex"] as $key => $value){
+				print "$key;";
+			}
+		print '</div>';
 		if($importfil_elever == false){
 			$filesSucces = false;
 		} else {
@@ -33,6 +40,12 @@ if(isset($_GET["upload"])){
 		if(!$importfil_grupper = getFile("rapport-grupper")){
 			$filesSucces = false;
 		} else {
+			print '<div class="alert alert-info">';
+			print "<h3>Importerar med formatet:</h3>";
+			foreach($IMPORT["Rapporter"]["Grupper"]["FieldIndex"] as $key => $value){
+				print "$key;";
+			}
+			print '</div>';
 			importLog("<p>Grupp-rapport inläst utan problem</p>");
 		}
 		
@@ -58,19 +71,25 @@ if(isset($_GET["upload"])){
 	  		//importLog(EMPTY_ALL_IMPORT_DATA_TABLES());
 			
 			importLog("<h3>Behandlar och lagrar Elev-rapporten</h3>");
+			print '<div class="rapport-lever-log" style="height: 300px; overflow: auto">';
 			parseElever($importfil_elever);
+			print '</div>';
 			
 			importLog("<h3>Behandlar och lagrar Grupp/kurs-rapporten</h3>");
+			print '<div class="rapport-grupper-log" style="height: 300px; overflow: auto">';
 			parseKurser($importfil_grupper, $lasarObj);
+			print '</div>';
 			
 			print "<h2>Importen lyckades</h2>";
 	  		print "<p>Datan i rapporterna är inläst (och ersatt eventuella äldre importer)</p>";
+
+			$_SESSION["datalagerDataChanged"] = true;
 			
 		} else {
 	 		print "<h3>Importen misslyckades</h3>";
 	  		print "<p>Uppladdning eller inläsning av en eller flera av rapportfilerna misslycka :'(</p>";
 		}
-	  
+
 
 
 	} else { // om inte alla filer med
@@ -79,7 +98,9 @@ if(isset($_GET["upload"])){
 
 	if(isset($_FILES["rapport-ind-elever"])){
 		importLog("<div><h2>Rapport från Individuella kurser-import</h2>");
-		
+
+		print '<div class="rapport-lever-log" style="height: 300px; overflow: auto">';
+
 		importLog("<h3>Läser in Individuella kurser-rapporten-rapport</h3>");
 		if(!$importfil_indElever = getFile("rapport-ind-elever")){
 			importlLog("<div class=\"error\"><h3>Något gick fel vid inläsning</h3></div>");

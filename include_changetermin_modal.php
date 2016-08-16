@@ -29,10 +29,14 @@
     $("#change-termin-start").val(initStartTerminId);
     $("#change-termin-slut").val(initSlutTerminId);
   }
-  function getAjaxCAll(){
+  //function getAjaxCAll(){
+  $("#change-termin-modal-confirm").click(function(){
     kursid = $("#change-termin-terminid").val();
     start = $("#change-termin-start").val();
     slut = $("#change-termin-slut").val();
-    return 'ajax.php?<?php print Config::PARAM_AJAX; ?>=update-termin-time&<?php print Config::PARAM_ID; ?>='+kursId+'&start='+start+'&slut='+slut;
-  }
+    query = '<?php print Config::PARAM_AJAX; ?>=update-termin-time&<?php print Config::PARAM_ID; ?>='+kursId+'&start='+start+'&slut='+slut;
+    console.log(query);
+    //return 'ajax.php?'+query;
+  });
+  //}
 </script>

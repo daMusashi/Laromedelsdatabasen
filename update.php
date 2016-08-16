@@ -23,13 +23,13 @@
 	
 	
 
-	addTimeToKurser();
-	moveTimeToKurser();
+	//addTimeToKurser();
+	//moveTimeToKurser();
 	
-	renameBokningar();
-	removeTimeFromBokningar(); 
-	createIds();
-	createNewIdsBinds();
+	//renameBokningar();
+	//removeTimeFromBokningar();
+	//createIds();
+	//createNewIdsBinds();
 
 
 	/* dev-data */

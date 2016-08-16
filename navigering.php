@@ -1,32 +1,5 @@
 <?php
 
-// undersöker vilken config-nav GET-nav motsvaras av
-// Hittas ingen används förvald, $CONFIG["defaultPrimNav"] ("hemsidan")
-
-$default_nav = CONFIG::PARAM_DEFAULT_NAV;
-if(Config::SIMPLE_MODE){
-	$default_nav = CONFIG::PARAM_DEFAULT_NAV_SIMPLE_MODE;
-}
-
-
-if(isset($_GET[CONFIG::PARAM_NAV])){
-	$_SESSION["currentNavKey"] = false;
-	foreach($NAV as $key => $navItem){
-		if($key == $_GET[CONFIG::PARAM_NAV]){
-			$_SESSION["currentNavKey"] = $key;
-		}
-	}
-	// Om felaktig GET-nav
-	if(!$_SESSION["currentNavKey"]){
-		$_SESSION["currentNavKey"] = $default_nav;
-	}
-} else {
-	// Om ingen GET-nav
-	$_SESSION["currentNavKey"] = $default_nav;
-}
-
-
-
 // Skapar menu-items, delar uppp i menyer, sorterar bort hidden och ej behöriga
 $menu = [];
 
@@ -79,12 +52,6 @@ foreach ($NAV as $key => $item) {
 }
 //var_dump($menu);
 // skriver ut navbar
-print "<nav  class=\"navbar navbar-default navbar-fixed-top\" id=\"nav-main\" role=\"navigation\">";
-
-print "<div class=\"branding\"><div  class=\"container\">";
-print "<h1>".TEXT::TITEL." <span class=\"version\">(v.".Config::VERSION.")</span></h1>";
-print "</div></div>";
-
 print "<div  class=\"container\">";
 
 print "<ul class=\"nav navbar-nav navbar-left\" role=\"menu\">";
@@ -108,7 +75,7 @@ print "<ul class=\"nav navbar-nav navbar-right\">";
 print "</ul>";
 
 
-print "</div></nav>";
+print "</div>";
 
 
 

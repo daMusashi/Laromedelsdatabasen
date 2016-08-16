@@ -96,6 +96,11 @@ $NAV["admin-import"]["label"] = "Import";
 $NAV["admin-import"]["roll"] = "dev";
 $NAV["admin-import"]["place"] = "admin";
 
+$NAV["admin-datalager"]["include"] = "admin/uppdatera_datalager.php";
+$NAV["admin-datalager"]["label"] = "Uppdatera datalager";
+$NAV["admin-datalager"]["roll"] = "admin";
+$NAV["admin-datalager"]["place"] = "admin";
+
 $NAV["admin-tabeller"]["include"] = "admin/printTabeller.php";
 $NAV["admin-tabeller"]["label"] = "Tabeller";
 $NAV["admin-tabeller"]["roll"] = "dev";

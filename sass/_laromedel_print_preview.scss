@@ -10,11 +10,23 @@
 		margin-bottom: 30px;
 		position: relative;
 
+
 		.print-logo {
 			position: absolute;
 			right: 0px;
 			top: 0px;
 			height: 100px;
 		}
+
+		/*h3 {
+			overflow: auto;
+			span {
+				display: block;
+				background: black;
+				color: white;
+				padding: 0.5em;
+				float: left;
+			}
+		}*/
 	}
 }
