@@ -1,5 +1,5 @@
-<?php
-session_start();
-header('Content-type: text/html');
-print "Hallå?";
+<?php
+session_start();
+header('Content-type: text/html');
+print "Hallå?";
 ?>
