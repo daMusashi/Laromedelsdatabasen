@@ -1,11 +1,24 @@
-.utskrift-data { margin-bottom: 100px; border-bottom-width: 2px; border-bottom-style: solid; border-bottom-color: #333; }
-.utskrift-data header { margin-bottom: 30px; position: relative; }
-.utskrift-data header .print-logo { position: absolute; right: 0px; top: 0px; height: 100px; }
-
-@media print { .utskrift-data { page-break-after: always; margin: 0px; border: none; }
-  .utskrift-data th { font-size: 85%; }
-  .utskrift-data td { font-size: 70%; }
-  .utskrift-data td.minor { font-size: 50%; }
-  .utskrift-data td.titel { width: 40%; }
-  .utskrift-data header { margin-bottom: 1.5cm; }
-  .utskrift-data header .print-logo { position: absolute; right: 0px; top: 0px; height: 2cm; } }
+.utskrift-data { margin-bottom: 100px; border-bottom-width: 2px; border-bottom-style: solid; border-bottom-color: #333; }
+.utskrift-data header { margin-bottom: 30px; position: relative; /*h3 {
+	overflow: auto;
+	span {
+		display: block;
+		background: black;
+		color: white;
+		padding: 0.5em;
+		float: left;
+	}
+}*/ }
+.utskrift-data header .print-logo { position: absolute; right: 0px; top: 0px; height: 100px; }
+
+@media print { .utskrift-data { page-break-after: always; margin: 0px; border: none; }
+  .utskrift-data th { font-size: 85%; }
+  .utskrift-data td { font-size: 70%; }
+  .utskrift-data td.minor { font-size: 50%; }
+  .utskrift-data td.titel { width: 40%; }
+  .utskrift-data header { margin-bottom: 1.5cm; }
+  .utskrift-data header .print-logo { position: absolute; right: 0px; top: 0px; height: 2cm; }
+  .utskrift-data header h3 {   /*span {
+	background-color: black;
+	color: white;
+	padding: 0.5em; }*/ } }

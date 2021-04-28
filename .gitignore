@@ -2,6 +2,8 @@
 Thumbs.db
 ehthumbs.db
 
+backups
+
 # Folder config file
 Desktop.ini
 
@@ -41,3 +43,9 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+.sass-cache/
+_import/
+_work/
+backups/
+_bak20150820/
+.idea/
