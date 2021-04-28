@@ -9,6 +9,7 @@ ini_set('max_execution_time', 120); //120 seconds = 2 minuter
 require_once("class_termin.php");
 
 
+
 final class CONFIG {
 
 	const VERSION = "3.22"; // med avslutande "/" (om inte tom, då bara "")
