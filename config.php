@@ -10,13 +10,13 @@ require_once("class_termin.php");
 
 
 final class CONFIG {
-	
+
 	const VERSION = "3.22"; // med avslutande "/" (om inte tom, då bara "")
 	const DEBUG = false; // om visa debug-prylar
 
 	const SIMPLE_MODE = false; // Visar bara det viktigaste - såsom bokning - när inte all data är klar
 	// se publics nedan för NAVs i simple mode
-	
+
 	const BASE_URL = "/laromedel/"; // med avslutande "/" (om inte tom, då bara "")
 
 	const DB_BACKUP_PATH = "backups";
@@ -29,10 +29,10 @@ final class CONFIG {
 	const PARAM_DEFAULT_NAV = "bocker";
 	const PARAM_DEFAULT_NAV_SIMPLE_MODE = "bocker";
 
-	const CURRENT_START_YEAR = 2018; // vilket start-år för presentation och filtrering av av tillfällen
+	const CURRENT_START_YEAR = 2020; // vilket start-år för presentation och filtrering av av tillfällen
 
-	const TILLFALLEN_START_YEAR = 2017; // vilket start-år för presentation och filtrering av av tillfällen
-	const TILLFALLEN_END_YEAR = 2019; // vilket start-år för presentation och filtrering av av tillfällen
+	const TILLFALLEN_START_YEAR = 2020; // vilket start-år för presentation och filtrering av av tillfällen
+	const TILLFALLEN_END_YEAR = 2021; // vilket start-år för presentation och filtrering av av tillfällen
 
 	const TILLFALLEN_LASAR_GENERIC_START_ID = "start"; // generellt datum för läsårtstar för presentation och filtrering av av tillfällen (visas inte just nu, ungefärligt bara för beräkning)
 	const TILLFALLEN_LASAR_GENERIC_END_ID = "slut"; // generellt datum för läsårtslutför presentation och filtrering av av tillfällen (visas inte just nu, ungefärligt bara för beräkning)

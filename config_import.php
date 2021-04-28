@@ -3,6 +3,7 @@
 
 
 // import config
+// personnummer 0;Efternamn 1;Ffrnamn 2;Ansvarig lärare 3;Klass 4: [ n*, te1* ] 5;Grupp 6
 
 $IMPORT["Rapporter"]["Elever"]["FieldIndex"]["Klass"] = 3; // Klasser
 
@@ -15,7 +16,7 @@ $IMPORT["Rapporter"]["Elever"]["FieldIndex"]["Fornamn"] = 2; // Elevens förnamn
 $IMPORT["Rapporter"]["Elever"]["FieldIndex"]["Larare"] = 4; // Lärare (Mentor)
 
 
-
+// ID (grupp) 0;Undervisande lärare 1;ht,vt 2;Elever 3
 $IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["GruppID"] = 0; // ID (Grupper/kurser)
 
 $IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Larare"] = 1; // Undervisande lärare (kommaseparerade lärar-taggar)
@@ -26,33 +27,35 @@ $IMPORT["Rapporter"]["Grupper"]["FieldIndex"]["Period"] = 3; // termin/hela åre
 
 $IMPORT["Rapporter"]["Grupper"]["AllowedPrefixes"] = array(
 
-"18FM/AG/", // 14FM//Em etc ind val
+"20FM", // FIX som tar alla då 'ä' i SÄG verkar faila
+"20EM", // FIX som tar alla då 'ä' i SÄG verkar faila
+"21FM", // FIX som tar alla då 'ä' i SÄG verkar faila
+"21EM", // FIX som tar alla då 'ä' i SÄG verkar faila
 
-"18FM//AG/", // fix för skrivfel
+"20FM/SÄG/", // 14FM//Em etc ind val
 
-"18EM/AG/",
+"20EM/SÄG/",
 
-"18FMHT/AG/",
+"20FMHT/SÄG/",
 
-"18FMVT/AG/",
+"20FMVT/SÄG/",
 
-"AG18", // språkval
+"AG20", // språkval
+"SÄG20", // språkval
+"SAG20", // språkval
 
-"SAG18",
+"21FM/SÄG/", // 14FM//Em etc ind val
 
-"19FM/AG/", // 14FM//Em etc ind val
+"21EM/SÄG/",
 
-"19FM//AG/", // fix för skrivfel
+"21FMHT/SÄG/",
 
-"19EM/AG/",
+"21FMVT/SÄG/",
 
-"19FMHT/AG/",
+"AG21", // språkval
 
-"19FMVT/AG/",
-
-"AG19", // språkval
-
-"SAG19",
+"SAG21", // språkval
+"SÄG21", // språkval
 
 "FNA",
 
@@ -62,13 +65,13 @@ $IMPORT["Rapporter"]["Grupper"]["AllowedPrefixes"] = array(
 
 "TE",
 
-"TIME",
-
 "IMSPR",
 
-"SVA"
+"SVA",
 
-); 
+"IM"
+
+);
 
 $IMPORT["Rapporter"]["Grupper"]["DisallowedPostfixes"] = array(
 
@@ -84,19 +87,19 @@ $IMPORT["Fil"]["ColumnSeparator"] = ";"; // Separerar fält/kolumner i importfil
 
 $IMPORT["Fil"]["ValueSeparator"] = ","; // Separerar värden i ett fält/kolumn i de fall de innehåller flera värden
 
-$IMPORT["Fil"]["FirstLineIsColumnnames"] = true; 
+$IMPORT["Fil"]["FirstLineIsColumnnames"] = true;
 
-$IMPORT["Fil"]["PreivewData"] = true; 
+$IMPORT["Fil"]["PreivewData"] = true;
 
-$IMPORT["Fil"]["NumPreviewLines"] = 2; 
+$IMPORT["Fil"]["NumPreviewLines"] = 2;
 
-$IMPORT["Fil"]["MaxFileSize"] = 500000; 
+$IMPORT["Fil"]["MaxFileSize"] = 500000;
 
-$IMPORT["Fil"]["AllowedExts"] = array("csv", "txt"); 
+$IMPORT["Fil"]["AllowedExts"] = array("csv", "txt");
 
 
 
-$IMPORT["outputLog"] = true; 
+$IMPORT["outputLog"] = true;
 
 
 
