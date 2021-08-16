@@ -19,7 +19,6 @@ final class CONFIG {
 	// se publics nedan för NAVs i simple mode
 
 	const BASE_URL = "/laromedel/"; // med avslutande "/" (om inte tom, då bara "")
-
 	const DB_BACKUP_PATH = "backups";
 
 	const PARAM_NAV = "o";
