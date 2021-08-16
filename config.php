@@ -30,10 +30,10 @@ final class CONFIG {
 	const PARAM_DEFAULT_NAV = "bocker";
 	const PARAM_DEFAULT_NAV_SIMPLE_MODE = "bocker";
 
-	const CURRENT_START_YEAR = 2020; // vilket start-år för presentation och filtrering av av tillfällen
+	const CURRENT_START_YEAR = 2021; // vilket start-år för presentation och filtrering av av tillfällen
 
-	const TILLFALLEN_START_YEAR = 2020; // vilket start-år för presentation och filtrering av av tillfällen
-	const TILLFALLEN_END_YEAR = 2021; // vilket start-år för presentation och filtrering av av tillfällen
+	const TILLFALLEN_START_YEAR = 2021; // vilket start-år för presentation och filtrering av av tillfällen
+	const TILLFALLEN_END_YEAR = 2022; // vilket start-år för presentation och filtrering av av tillfällen
 
 	const TILLFALLEN_LASAR_GENERIC_START_ID = "start"; // generellt datum för läsårtstar för presentation och filtrering av av tillfällen (visas inte just nu, ungefärligt bara för beräkning)
 	const TILLFALLEN_LASAR_GENERIC_END_ID = "slut"; // generellt datum för läsårtslutför presentation och filtrering av av tillfällen (visas inte just nu, ungefärligt bara för beräkning)
